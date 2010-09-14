@@ -44,6 +44,19 @@ class TwitterPlugin(ButtPlugin):
             self.bot.connection.privmsg(reply_to, 
                 "%s has been quoted to twitter." % user)
 
+    def do_untwit(self, message, reply_to):
+        now = mktime(localtime(None))
+        if self.last_untwit + 60 >= now:
+            self.bot.connection.privmsg(reply_to, "Chill.")
+            return
+        timeline = \
+            self.twitter.GetUserTimeline(options={
+                'screen_name': self.screen_name
+                })
+        id = timeline[0]['id']
+        result = self.twitter.ApiCall("statuses/destroy/%s" % id, "POST", {})
+        self.bot.connection.privmsg(reply_to, "Deleted tweet %s" % id)
+        self.last_untwit = mktime(localtime(None))
 
     def do_sup(self, message, reply_to):
        
@@ -52,11 +65,6 @@ class TwitterPlugin(ButtPlugin):
         new_text = '<%s> %s' % (timeline[0]['user']['screen_name'], 
             timeline[0]['text'])
         self.bot.connection.privmsg(reply_to, new_text)
-        #except Exception as e:
-        #    self.bot.connection.privmsg(reply_to, "That didn't work.")
-        #    print e
-        #    traceback.print_exc
-        #    return
 
     def do_twit(self, message, reply_to):
         if len(message) > 140:
@@ -89,3 +97,4 @@ class TwitterPlugin(ButtPlugin):
             self.initialize_twitter_auth()
         self.initialize_twitter()
         self.last_reply_time = mktime(localtime(None))
+        self.last_untwit = mktime(localtime(None))
