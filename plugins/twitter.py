@@ -1,4 +1,6 @@
 import os
+import traceback
+from time import localtime, mktime, strptime
 import oauth2 as oauth
 from oauthtwitter import OAuthApi
 import cPickle
@@ -13,10 +15,53 @@ class TwitterPlugin(ButtPlugin):
         'consumer_secret'
         )
 
-    def _twit(self, c, e, message):
+    def timed(self, ticker):
+        if ticker % 120 == 0 or ticker == 0:
+            tweets = self.twitter.GetMentions()
+            times = [strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y') \
+                for tweet in tweets]
+            max_time = times[0]
+            for tweet in tweets:
+                time_posted = strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
+                new_text = '<%s> %s' % (tweet['user']['screen_name'], tweet['text'])
+
+                if time_posted > localtime(self.last_reply_time):
+                    for chname, chobj in self.bot.channels.items():
+                        self.bot.connection.privmsg(chname, new_text)
+            self.last_reply_time = mktime(max_time)
+
+    def do_quote(self, message, reply_to):
+        args = message.strip().split(' ')
+        tags = filter(lambda x: x[0] == '#', args)
+        user = args[0]
+        if self.bot.log.has_key(reply_to) and self.bot.log[reply_to].has_key(user):
+            last_said = self.bot.log[reply_to][user][-1].strip()
+            last_said += " " + " ".join(tags)
+            if len(last_said) > 140:
+                self.bot.connection.privmsg(reply_to, "Too long :(")
+                return
+            self.twitter.UpdateStatus(last_said)
+            self.bot.connection.privmsg(reply_to, 
+                "%s has been quoted to twitter." % user)
+
+
+    def do_sup(self, message, reply_to):
+       
+        timeline = \
+            self.twitter.GetUserTimeline(options={'screen_name': message})
+        new_text = '<%s> %s' % (timeline[0]['user']['screen_name'], 
+            timeline[0]['text'])
+        self.bot.connection.privmsg(reply_to, new_text)
+        #except Exception as e:
+        #    self.bot.connection.privmsg(reply_to, "That didn't work.")
+        #    print e
+        #    traceback.print_exc
+        #    return
+
+    def do_twit(self, message, reply_to):
         if len(message) > 140:
-            c.privmsg(e.target(), "Trim off %d characters, dickface" % \
-                len(message))
+            self.bot.connection.privmsg(reply_to,
+                "Trim off %d characters, dickface" % len(message))
             return
         self.twitter.UpdateStatus(message)
 
@@ -39,16 +84,8 @@ class TwitterPlugin(ButtPlugin):
             access_token['oauth_token'], access_token['oauth_token_secret'])
         self.screen_name = access_token['screen_name']
 
-    def on_pubmsg(self, c, e):
-        tokens = e.arguments()[0].split(' ')
-        if tokens[0] == 'twit':
-            self._twit(c, e, ' '.join(tokens[1:]))
-
     def load_hook(self):
         while not os.path.exists('.twitter_auth'):
             self.initialize_twitter_auth()
         self.initialize_twitter()
-
-        
-        
-
+        self.last_reply_time = mktime(localtime(None))

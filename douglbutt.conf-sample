@@ -4,6 +4,7 @@ channel=#test
 nick=dougltest
 plugin_dir=plugins
 user=Frederick Douglbutt
+debug=True
 
 [twitter]
 consumer_key=xxxxxx

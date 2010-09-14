@@ -26,9 +26,32 @@ class ButtPlugin(object):
 
     required_settings = ()
 
+    def _error(self, exception):
+        print "EXCEPTION: %s %s" % (repr(exception), exception)
+
+    def _command_check(self, c, e, reply_to):
+        """Process commands that have corresponding methods."""
+        arg = e.arguments()[0]
+        cmds = arg.split(' ')
+        for cmd in cmds:
+            method_name = 'do_%s' % cmd
+            if hasattr(self, method_name):
+                method = getattr(self, method_name)
+                try:
+                    method(' '.join(cmds[1:]), reply_to)
+                except Exception as e:
+                    self._error(e)
+                    self.bot.connection.privmsg(reply_to, "An error occurred.")
+
     def on_pubmsg(self, c, e):
-        """This is an example of a hooked event."""
-        pass
+        """This is an example of a hooked event. This is also the default
+        method for handling commands, so if you are subclassing this,
+        make sure you call the original on_pubmsg."""
+        self._command_check(c, e, e.target())
+
+    def on_privmsg(self, c, e):
+        """Same thing as on_pubmsg, only for private messages."""
+        self._command_check(c, e, nm_to_n(e.source()))
 
     def timed(self, interval):
         """interval is the interal ticker for the timer. Use modulus to define
@@ -66,6 +89,24 @@ class DouglButt(SingleServerIRCBot):
                 method = getattr(plugin, method_name)
                 method(c, e)
 
+    def _log(self, channel, nickmask, message):
+        nick = nm_to_n(nickmask)
+        if channel:
+            if not self.log.has_key(channel):
+                self.log[channel] = {}
+            if not self.log[channel].has_key(nick):
+                self.log[channel][nick] = []
+            self.log[channel][nick].append(message)
+            while len(self.log[channel][nick]) > 100:
+                self.log[channel][nick].pop(0)
+        else:
+            if not self.log.has_key(nick):
+                self.log[nick] = []
+            self.log[nick].append(message)
+            while len(self.log[nick]) > 100:
+                self.log[nick].pop(0)
+
+
     def __init__(self, settings, plugins=[]):
 
         if not settings.has_key('port'):
@@ -84,20 +125,51 @@ class DouglButt(SingleServerIRCBot):
 
         self.ticker = 0
         self.ircobj.execute_delayed(1.0, self._timed_events)
+        self.log = {}
+        if settings.has_key('debug'):
+            self.debug = True
 
     def on_nicknameinuse(self, c, e):
         c.nick(c.get_nickname() + "_")
         self._hook('on_nicknameinuse', c, e)
 
     def on_welcome(self, c, e):
+        if self.debug:
+            print e.arguments()[0]
         c.join(self.channel)
         self._hook('on_welcome', c, e)
 
     def on_privmsg(self, c, e):
+        if self.debug:
+            print "%s\t%s" % (e.source(), e.arguments()[0])
         self._hook('on_privmsg', c, e)
+        self._log(None, e.source(), e.arguments()[0])
+
+    def on_notice(self, c, e):
+        if self.debug:
+            print "%s: %s" % (e.source(), e.arguments()[0])
+        self._hook('on_notice', c, e)
+
+    def on_join(self, c, e):
+        if self.debug:
+            print "Joined %s" % e.target()
+        self._hook('on_join', c, e)
+
+    def on_part(self, c, e):
+        if self.debug:
+            print "Parted %s" % e.target()
+        self._hook('on_part', c, e)
+    
+    def on_kick(self, c, e):
+        if self.debug:
+            print "%s kicked from %s by %s" % (e.arguments()[0], e.target(), e.source())
+        self._hook('on_kick', c, e)
 
     def on_pubmsg(self, c, e):
+        if self.debug:
+            print "%s %s\t%s" % (e.target(), e.source(), e.arguments()[0])
         self._hook('on_pubmsg', c, e)
+        self._log(e.target(), e.source(), e.arguments()[0])
         return
 
 
