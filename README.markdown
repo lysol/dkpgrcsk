@@ -1,6 +1,8 @@
 FREDERICK DOUGLBUTT
 ===================
 
+![Douglbutt](http://a3.twimg.com/profile_images/338240875/225px-Frederick_Douglass_portrait.jpg "Douglbutt")
+
 This is an ultra-simple (sorta) IRC bot that uses irclib. A little messy,
 but I'm ok with it. You can write new plugins pretty simply.
 
