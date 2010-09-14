@@ -1,0 +1,10 @@
+[douglbutt]
+server=irc.slashnet.org
+channel=#test
+nick=dougltest
+plugin_dir=plugins
+user=Frederick Douglbutt
+
+[twitter]
+consumer_key=xxxxxx
+consumer_secret=xxxxxxxxxxxxxxxxxxxxxx
