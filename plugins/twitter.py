@@ -12,7 +12,14 @@ class TwitterPlugin(ButtPlugin):
         'consumer_key',
         'consumer_secret'
         )
-    
+
+    def _twit(self, c, e, message):
+        if len(message) > 140:
+            c.privmsg(e.target(), "Trim off %d characters, dickface" % \
+                len(message))
+            return
+        self.twitter.UpdateStatus(message)
+
     def initialize_twitter_auth(self):
         """Follow Twitter's idiotic authentication procedures"""
         self.twitter = OAuthApi(self.consumer_key, self.consumer_secret)
@@ -33,7 +40,9 @@ class TwitterPlugin(ButtPlugin):
         self.screen_name = access_token['screen_name']
 
     def on_pubmsg(self, c, e):
-        pass
+        tokens = e.arguments()[0].split(' ')
+        if tokens[0] == 'twit':
+            self._twit(c, e, ' '.join(tokens[1:]))
 
     def load_hook(self):
         while not os.path.exists('.twitter_auth'):

@@ -14,7 +14,11 @@ class MissingPluginSetting(Exception):
 
 
 class ButtPlugin(object):
+    """Provide an abstracted functionality to the IRC bot. Handles IRC events
+    if they are defined."""
 
+    # Define a plugin name in lowercase here. This is also the section name in
+    # the configuration file.
     __provides__ = None
 
     # This is a plugin. So it has this attribute.
@@ -22,7 +26,17 @@ class ButtPlugin(object):
 
     required_settings = ()
 
+    def on_pubmsg(self, c, e):
+        """This is an example of a hooked event."""
+        pass
+
+    def timed(self, interval):
+        """interval is the interal ticker for the timer. Use modulus to define
+        more sparse intervals than 1 per second."""
+        pass
+
     def load_hook(self):
+        """Execute something when the plugin is loaded."""
         pass
 
     def __init__(self, bot, settings):
@@ -35,20 +49,30 @@ class ButtPlugin(object):
 
 
 class DouglButt(SingleServerIRCBot):
+    """Douglbutt is an IRC bot."""
+
+    def _timed_events(self):
+        """Process timed events in plugins."""
+        for plugin in self.plugins:
+            if hasattr(plugin, 'timed'):
+                plugin.timed(self.ticker)
+        self.ticker += 1
+        self.ircobj.execute_delayed(1.0, self._timed_events)
 
     def _hook(self, method_name, c, e):
+        """Process event hooks."""
         for plugin in self.plugins:
             if hasattr(plugin, method_name):
                 method = getattr(plugin, method_name)
                 method(c, e)
 
     def __init__(self, settings, plugins=[]):
-        
+
         if not settings.has_key('port'):
             port = 6667
         else:
             port = settings['port']
-        
+
         SingleServerIRCBot.__init__(self, [(settings['server'], port)], 
             settings['nick'], settings['user'])
         self.channel = settings['channel']
@@ -57,6 +81,9 @@ class DouglButt(SingleServerIRCBot):
             plugin_class = plugin[0]
             plugin_settings = plugin[1]
             self.plugins.append(plugin_class(self, plugin_settings))
+
+        self.ticker = 0
+        self.ircobj.execute_delayed(1.0, self._timed_events)
 
     def on_nicknameinuse(self, c, e):
         c.nick(c.get_nickname() + "_")
@@ -98,7 +125,7 @@ def main():
     mod = __import__(settings['plugin_dir'])
     for plugin in filter(lambda y: hasattr(y, 'yo_mtv_raps'),
         mod.__dict__.values()):
-        
+
         if plugin.__provides__ is not None:
             plugin_settings = {}
             if config.has_section(plugin.__provides__):
