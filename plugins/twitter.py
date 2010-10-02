@@ -59,9 +59,9 @@ class TwitterPlugin(ButtPlugin):
         self.last_untwit = mktime(localtime(None))
 
     def do_sup(self, message, reply_to):
-       
+        username = message.split(' ')[0]
         timeline = \
-            self.twitter.GetUserTimeline(options={'screen_name': message})
+            self.twitter.GetUserTimeline(options={'screen_name': username})
         new_text = '<%s> %s' % (timeline[0]['user']['screen_name'], 
             timeline[0]['text'])
         self.bot.connection.privmsg(reply_to, new_text)

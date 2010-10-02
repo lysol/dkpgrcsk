@@ -33,15 +33,15 @@ class ButtPlugin(object):
         """Process commands that have corresponding methods."""
         arg = e.arguments()[0]
         cmds = arg.split(' ')
-        for cmd in cmds:
-            method_name = 'do_%s' % cmd
-            if hasattr(self, method_name):
-                method = getattr(self, method_name)
-                try:
-                    method(' '.join(cmds[1:]), reply_to)
-                except Exception as e:
-                    self._error(e)
-                    self.bot.connection.privmsg(reply_to, "An error occurred.")
+        cmd = cmds[0]
+        method_name = 'do_%s' % cmd
+        if hasattr(self, method_name):
+            method = getattr(self, method_name)
+            try:
+                method(' '.join(cmds[1:]), reply_to)
+            except Exception as e:
+                self._error(e)
+                self.bot.connection.privmsg(reply_to, "An error occurred.")
 
     def on_pubmsg(self, c, e):
         """This is an example of a hooked event. This is also the default
