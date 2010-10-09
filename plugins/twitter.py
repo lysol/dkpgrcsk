@@ -20,7 +20,10 @@ class TwitterPlugin(ButtPlugin):
             tweets = self.twitter.GetMentions()
             times = [strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y') \
                 for tweet in tweets]
-            max_time = times[0]
+            if len(times) > 0:
+                max_time = times[0]
+            else:
+                return
             for tweet in tweets:
                 time_posted = strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
                 new_text = '<%s> %s' % (tweet['user']['screen_name'], tweet['text'])
@@ -69,7 +72,7 @@ class TwitterPlugin(ButtPlugin):
     def do_twit(self, message, reply_to):
         if len(message) > 140:
             self.bot.connection.privmsg(reply_to,
-                "Trim off %d characters, dickface" % len(message))
+                "Trim off %d characters, dickface" % (len(message) - 140))
             return
         self.twitter.UpdateStatus(message)
 
