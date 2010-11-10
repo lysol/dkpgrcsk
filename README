@@ -12,3 +12,17 @@ but I'm ok with it. You can write new plugins pretty simply.
 
 But, honestly, this bot isn't really suitable for anyone without a decent
 chunk of Python knowledge.
+
+REQUIREMENTS
+============
+
+Tumblr support requires:
+
+  * pymblr http://github.com/lysol/pymblr
+  * poster http://atlee.ca/software/poster/
+  * elementtree http://effbot.org/zone/element-index.htm
+  * mechanize http://wwwsearch.sourceforge.net/mechanize/
+
+All but poster and pymblr should be available via easy_install. Tumblr support relies on pymblr's autopost_url, so any of the forks should be ok, and I try to merge in improvements from the forks.
+
+Twitter support requires nothing! That's because I just copied the API module into the plugin directory. It's also oauthified, so you don't have to freak out about your twitter anymore.
