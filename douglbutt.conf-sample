@@ -9,3 +9,8 @@ debug=True
 [twitter]
 consumer_key=xxxxxx
 consumer_secret=xxxxxxxxxxxxxxxxxxxxxx
+
+[tumblr]
+email=dudes@websites.com
+password=tacosalad
+tumblog=dogslookinglikepeople.tumblr.com

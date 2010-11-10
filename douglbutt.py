@@ -6,6 +6,7 @@ from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_h, irc_lower, ip_numstr_to_quad, ip_quad_to_numstr
 from optparse import OptionParser
 import ConfigParser
+import pyfiurl
 
 class MissingPluginSetting(Exception):
 
@@ -34,14 +35,23 @@ class ButtPlugin(object):
         arg = e.arguments()[0]
         cmds = arg.split(' ')
         cmd = cmds[0]
+        message = ' '.join(cmds[1:])
+        full_message = ' '.join(cmds)
         method_name = 'do_%s' % cmd
+        sender = e.source()
         if hasattr(self, method_name):
             method = getattr(self, method_name)
             try:
-                method(' '.join(cmds[1:]), reply_to)
+                method(message, reply_to)
             except Exception as e:
                 self._error(e)
                 self.bot.connection.privmsg(reply_to, "An error occurred.")
+
+        if hasattr(self, 'handle_url'):
+            urls = pyfiurl.grab(full_message)
+            if urls:
+                for url in urls:
+                    self.handle_url(full_message, reply_to, url, sender)
 
     def on_pubmsg(self, c, e):
         """This is an example of a hooked event. This is also the default
@@ -153,6 +163,8 @@ class DouglButt(SingleServerIRCBot):
     def on_join(self, c, e):
         if self.debug:
             print "Joined %s" % e.target()
+        if not self.log.has_key(e.target()):
+            self.log[e.target()] = {}
         self._hook('on_join', c, e)
 
     def on_part(self, c, e):
