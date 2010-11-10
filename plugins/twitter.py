@@ -7,7 +7,7 @@ import cPickle
 from douglbutt import ButtPlugin
 
 class TwitterPlugin(ButtPlugin):
-    
+
     __provides__ = 'twitter'
 
     required_settings = (
@@ -18,8 +18,11 @@ class TwitterPlugin(ButtPlugin):
     def timed(self, ticker):
         if ticker % 120 == 0 or ticker == 0:
             tweets = self.twitter.GetMentions()
-            times = [strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y') \
-                for tweet in tweets]
+            try:
+                times = [strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y') \
+                    for tweet in tweets]
+            except TypeError:
+                return
             if len(times) > 0:
                 max_time = times[0]
             else:
@@ -65,7 +68,7 @@ class TwitterPlugin(ButtPlugin):
         username = message.split(' ')[0]
         timeline = \
             self.twitter.GetUserTimeline(options={'screen_name': username})
-        new_text = '<%s> %s' % (timeline[0]['user']['screen_name'], 
+        new_text = u'<%s> %s' % (timeline[0]['user']['screen_name'], 
             timeline[0]['text'])
         self.bot.connection.privmsg(reply_to, new_text)
 
