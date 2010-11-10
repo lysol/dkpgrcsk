@@ -23,7 +23,7 @@ Tumblr support requires:
   * [pymblr](http://github.com/lysol/pymblr "pymblr")
   * [poster](http://atlee.ca/software/poster/ "poster")
   * [elementtree](http://effbot.org/zone/element-index.htm "elementree")
-  * [mechanize]http://wwwsearch.sourceforge.net/mechanize/ "mechanize")
+  * [mechanize](http://wwwsearch.sourceforge.net/mechanize/ "mechanize")
 
 All but poster and pymblr should be available via easy_install. Tumblr support
 relies on pymblr's autopost\_url, so any of the forks should be ok, and I try to
