@@ -23,6 +23,10 @@ Tumblr support requires:
   * elementtree http://effbot.org/zone/element-index.htm
   * mechanize http://wwwsearch.sourceforge.net/mechanize/
 
-All but poster and pymblr should be available via easy_install. Tumblr support relies on pymblr's autopost_url, so any of the forks should be ok, and I try to merge in improvements from the forks.
+All but poster and pymblr should be available via easy_install. Tumblr support
+relies on pymblr's autopost_url, so any of the forks should be ok, and I try to
+merge in improvements from the forks.
 
-Twitter support requires nothing! That's because I just copied the API module into the plugin directory. It's also oauthified, so you don't have to freak out about your twitter anymore.
+Twitter support requires nothing! That's because I just copied the API module
+into the plugin directory. It's also oauthified, so you don't have to freak
+out about your twitter anymore.
