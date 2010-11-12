@@ -34,7 +34,7 @@ class TwitterPlugin(ButtPlugin):
                 if time_posted > localtime(self.last_reply_time):
                     for chname, chobj in self.bot.channels.items():
                         self.bot.connection.privmsg(chname, 
-                            new_text.encode('ascii','replace')
+                            new_text.encode('ascii','replace'))
             self.last_reply_time = mktime(max_time)
 
     def do_quote(self, message, reply_to):
