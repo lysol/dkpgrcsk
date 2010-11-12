@@ -2,6 +2,8 @@ from douglbutt import ButtPlugin
 from pymblr import Api, TumblrError
 from ircbot import nm_to_n
 import cgi
+from mechanize._mechanize import BrowserStateError
+from time import sleep
 
 class TumblrPlugin(ButtPlugin):
 
@@ -80,17 +82,18 @@ class TumblrPlugin(ButtPlugin):
                 if url not in api.readurls():
                     post = api.autopost_url(url, caption, tag_args)
                     print "%s posted a %s to %s" % (nick, post['type'], post['url'])
-            except TumblrError:
-                post = api.autopost_url(url, caption, tag_args)
-                print "%s posted a %s to %s" % (nick, post['type'], post['url'])
+            except BrowserStateError:
+                # Skipping because of a mechanize error.
+                return
 
         except TumblrError, e:
+            return
             if (times < 3):
                 print e
                 print "Error encountered, trying it again."
                 # try it again, a couple of times.
                 sleep(3)
-                self.url_handler(self, user, channel, url, msg, times)
+                self.handle_url(self, message, reply_to, url, sender, times=times)
             else:
                 print e
                 #bot.say(channel, "Something horrible happened.")
