@@ -4,6 +4,7 @@ from ircbot import nm_to_n
 import cgi
 from mechanize._mechanize import BrowserStateError
 from time import sleep
+from urllib2 import URLError
 
 class TumblrPlugin(ButtPlugin):
 
@@ -19,11 +20,11 @@ class TumblrPlugin(ButtPlugin):
         new_args = message.strip().split(' ')
         user = new_args[0]
         tag_args = filter(
-            lambda arg: arg[0] == '#'
+            lambda arg: len(arg) > 0 and arg[0] == '#'
             ,new_args
         )
         real_args = filter(
-            lambda arg: arg[0] != '#'
+            lambda arg: len(arg) > 0 and arg[0] != '#'
             ,new_args
         )
         # remove hash
@@ -60,12 +61,12 @@ class TumblrPlugin(ButtPlugin):
         new_args = message.strip().split(' ')
         
         tag_args = filter(
-            lambda arg: arg[0] == '#'
+            lambda arg: len(arg) > 0 and arg[0] == '#'
             ,new_args
         )
 
         real_args = filter(
-            lambda arg: arg[0] != '#'
+            lambda arg: len(arg) > 0 and arg[0] != '#'
             ,new_args
         ) 
 
@@ -84,6 +85,8 @@ class TumblrPlugin(ButtPlugin):
                     print "%s posted a %s to %s" % (nick, post['type'], post['url'])
             except BrowserStateError:
                 # Skipping because of a mechanize error.
+                return
+            except URLError:
                 return
 
         except TumblrError, e:
