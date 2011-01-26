@@ -5,6 +5,7 @@ import oauth2 as oauth
 from oauthtwitter import OAuthApi
 import cPickle
 from douglbutt import ButtPlugin
+from urlparse import urlparse
 
 class TwitterPlugin(ButtPlugin):
 
@@ -85,6 +86,19 @@ class TwitterPlugin(ButtPlugin):
                 "Trim off %d characters, dickface" % (len(message) - 140))
             return
         self.twitter.UpdateStatus(message)
+
+    def handle_url(self, message, reply_to, url, sender, times=0):
+        """Autodetect twitter urls and paste links."""
+        parsed = urlparse(url)
+        if parsed.netloc[-11:] == 'twitter.com':
+            path = (parsed.path + '#' + parsed.fragment).split('/')
+            if path[-2][:6] == 'status':
+                tweet_id = path[-1]
+                result = self.twitter.ApiCall("statuses/show/%s" % tweet_id, "GET", {})
+                new_text = u'<%s> %s' % (result['user']['screen_name'],
+                    result['text'])
+                new_text = new_text.encode('utf-8')
+                self.bot.connection.privmsg(reply_to, new_text)
 
     def initialize_twitter_auth(self):
         """Follow Twitter's idiotic authentication procedures"""
