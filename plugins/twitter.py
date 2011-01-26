@@ -19,7 +19,8 @@ class TwitterPlugin(ButtPlugin):
         if ticker % 120 == 0 or ticker == 0:
             tweets = self.twitter.GetMentions()
             try:
-                times = [strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y') \
+                times = [strptime(tweet['created_at'],
+                    '%a %b %d %H:%M:%S +0000 %Y') \
                     for tweet in tweets]
             except TypeError:
                 return
@@ -28,8 +29,11 @@ class TwitterPlugin(ButtPlugin):
             else:
                 return
             for tweet in tweets:
-                time_posted = strptime(tweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
-                new_text = '<%s> %s' % (tweet['user']['screen_name'], tweet['text'])
+                time_posted = strptime(tweet['created_at'],
+                    '%a %b %d %H:%M:%S +0000 %Y')
+                new_text = u'<%s> %s' % (tweet['user']['screen_name'],
+                    tweet['text'])
+                new_text = new_text.encode('utf-8')
 
                 if time_posted > localtime(self.last_reply_time):
                     for chname, chobj in self.bot.channels.items():
@@ -41,7 +45,8 @@ class TwitterPlugin(ButtPlugin):
         args = message.strip().split(' ')
         tags = filter(lambda x: x[0] == '#', args)
         user = args[0]
-        if self.bot.log.has_key(reply_to) and self.bot.log[reply_to].has_key(user):
+        if self.bot.log.has_key(reply_to) and \
+            self.bot.log[reply_to].has_key(user):
             last_said = self.bot.log[reply_to][user][-1].strip()
             last_said += " " + " ".join(tags)
             if len(last_said) > 140:
@@ -71,6 +76,7 @@ class TwitterPlugin(ButtPlugin):
             self.twitter.GetUserTimeline(options={'screen_name': username})
         new_text = u'<%s> %s' % (timeline[0]['user']['screen_name'], 
             timeline[0]['text'])
+        new_text = new_text.encode('utf-8')
         self.bot.connection.privmsg(reply_to, new_text)
 
     def do_twit(self, message, reply_to):
@@ -86,7 +92,8 @@ class TwitterPlugin(ButtPlugin):
         temp_credentials = self.twitter.getRequestToken()
         print(self.twitter.getAuthorizationURL(temp_credentials))
         oauth_verifier = raw_input('Enter the PIN Twitter returns: ')
-        access_token = self.twitter.getAccessToken(temp_credentials, oauth_verifier)
+        access_token = self.twitter.getAccessToken(temp_credentials,
+            oauth_verifier)
         auth_file = open('.twitter_auth', 'wb')
         cPickle.dump(access_token, auth_file)
         auth_file.close()
