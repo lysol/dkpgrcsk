@@ -99,7 +99,11 @@ class TwitterPlugin(ButtPlugin):
             path = (parsed.path + '#' + parsed.fragment).split('/')
             if path[-2][:6] == 'status':
                 tweet_id = path[-1]
-                result = self.twitter.ApiCall("statuses/show/%s" % tweet_id, "GET", {})
+                # lazy. old urls have no fragment.
+                if tweet_id[-1] == '#':
+                    tweet_id = tweet_id[:-1]
+                apipath = "statuses/show/%s" % tweet_id
+                result = self.twitter.ApiCall(apipath, "GET", {})
                 if type(result) == urllib2.HTTPError or \
                     type(result) ==  urllib2.URLError: 
                     self.bot.connection.privmsg(reply_to, "Fail whale")
