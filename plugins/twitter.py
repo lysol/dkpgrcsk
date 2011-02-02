@@ -6,6 +6,7 @@ from oauthtwitter import OAuthApi
 import cPickle
 from douglbutt import ButtPlugin
 from urlparse import urlparse
+import urllib2
 
 class TwitterPlugin(ButtPlugin):
 
@@ -68,6 +69,10 @@ class TwitterPlugin(ButtPlugin):
                 })
         id = timeline[0]['id']
         result = self.twitter.ApiCall("statuses/destroy/%s" % id, "POST", {})
+        if type(result) == urllib2.HTTPError or \
+            type(result) == urllib2.URLError: 
+            self.bot.connection.privmsg(reply_to, "Fail whale")
+            return
         self.bot.connection.privmsg(reply_to, "Deleted tweet %s" % id)
         self.last_untwit = mktime(localtime(None))
 
@@ -95,6 +100,10 @@ class TwitterPlugin(ButtPlugin):
             if path[-2][:6] == 'status':
                 tweet_id = path[-1]
                 result = self.twitter.ApiCall("statuses/show/%s" % tweet_id, "GET", {})
+                if type(result) == urllib2.HTTPError or \
+                    type(result) ==  urllib2.URLError: 
+                    self.bot.connection.privmsg(reply_to, "Fail whale")
+                    return
                 new_text = u'<%s> %s' % (result['user']['screen_name'],
                     result['text'])
                 new_text = new_text.encode('utf-8')
