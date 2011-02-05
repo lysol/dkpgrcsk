@@ -19,29 +19,32 @@ class TwitterPlugin(ButtPlugin):
 
     def timed(self, ticker):
         if ticker % 120 == 0 or ticker == 0:
-            tweets = self.twitter.GetMentions()
-            try:
-                times = [strptime(tweet['created_at'],
-                    '%a %b %d %H:%M:%S +0000 %Y') \
-                    for tweet in tweets]
-            except TypeError:
-                return
-            if len(times) > 0:
-                max_time = times[0]
-            else:
-                return
-            for tweet in tweets:
-                time_posted = strptime(tweet['created_at'],
-                    '%a %b %d %H:%M:%S +0000 %Y')
-                new_text = u'<%s> %s' % (tweet['user']['screen_name'],
-                    tweet['text'])
-                new_text = new_text.encode('utf-8')
+            def handle_tweets(tweets):
+                try:
+                    times = [strptime(tweet['created_at'],
+                        '%a %b %d %H:%M:%S +0000 %Y') \
+                        for tweet in tweets]
+                except TypeError:
+                    return
+                if len(times) > 0:
+                    max_time = times[0]
+                else:
+                    return
+                for tweet in tweets:
+                    time_posted = strptime(tweet['created_at'],
+                        '%a %b %d %H:%M:%S +0000 %Y')
+                    new_text = u'<%s> %s' % (tweet['user']['screen_name'],
+                        tweet['text'])
+                    new_text = new_text.encode('utf-8')
 
-                if time_posted > localtime(self.last_reply_time):
-                    for chname, chobj in self.bot.channels.items():
-                        self.bot.connection.privmsg(chname, 
-                            new_text) #.encode('ascii','replace'))
-            self.last_reply_time = mktime(max_time)
+                    if time_posted > localtime(self.last_reply_time):
+                        for chname, chobj in self.bot.channels.items():
+                            self.bot.connection.privmsg(chname, 
+                                new_text) #.encode('ascii','replace'))
+                self.last_reply_time = mktime(max_time)
+
+            self.bot.set_callback(self.twitter.GetMentions, handle_tweets)
+
 
     def do_quote(self, message, reply_to):
         args = message.strip().split(' ')
@@ -54,43 +57,49 @@ class TwitterPlugin(ButtPlugin):
             if len(last_said) > 140:
                 self.bot.connection.privmsg(reply_to, "Too long :(")
                 return
-            self.twitter.UpdateStatus(last_said)
-            self.bot.connection.privmsg(reply_to, 
-                "%s has been quoted to twitter." % user)
-
+            def reply(result):
+                 self.bot.connection.privmsg(reply_to, 
+                    "%s has been quoted to twitter." % user)
+            self.bot.set_callback(self.twitter.UpdateStatus, reply,
+                args=[last_said])
+           
     def do_untwit(self, message, reply_to):
         now = mktime(localtime(None))
         if self.last_untwit + 60 >= now:
             self.bot.connection.privmsg(reply_to, "Chill.")
             return
-        timeline = \
-            self.twitter.GetUserTimeline(options={
-                'screen_name': self.screen_name
-                })
-        id = timeline[0]['id']
-        result = self.twitter.ApiCall("statuses/destroy/%s" % id, "POST", {})
-        if type(result) == urllib2.HTTPError or \
-            type(result) == urllib2.URLError: 
-            self.bot.connection.privmsg(reply_to, "Fail whale")
-            return
-        self.bot.connection.privmsg(reply_to, "Deleted tweet %s" % id)
-        self.last_untwit = mktime(localtime(None))
+        def run_timeline(timeline):
+
+            id = timeline[0]['id']
+            result = self.twitter.ApiCall("statuses/destroy/%s" % id, "POST", {})
+            if type(result) == urllib2.HTTPError or \
+                type(result) == urllib2.URLError: 
+                self.bot.connection.privmsg(reply_to, "Fail whale")
+                return
+            self.bot.connection.privmsg(reply_to, "Deleted tweet %s" % id)
+            self.last_untwit = mktime(localtime(None))
+        self.bot.set_callback(self.twitter.GetUserTimeline, run_timeline,
+            kwargs={'options': {'screen_name': self.screen_name}})
+
 
     def do_sup(self, message, reply_to):
         username = message.split(' ')[0]
-        timeline = \
-            self.twitter.GetUserTimeline(options={'screen_name': username})
-        new_text = u'<%s> %s' % (timeline[0]['user']['screen_name'], 
-            timeline[0]['text'])
-        new_text = new_text.encode('utf-8')
-        self.bot.connection.privmsg(reply_to, new_text)
+        def run_timeline(timeline):
+            new_text = u'<%s> %s' % (timeline[0]['user']['screen_name'], 
+                timeline[0]['text'])
+            new_text = new_text.encode('utf-8')
+            self.bot.connection.privmsg(reply_to, new_text)
+
+        self.bot.set_callback(self.twitter.GetUserTimeline, run_timeline,
+            kwargs={'options': {'screen_name': username}})
 
     def do_twit(self, message, reply_to):
         if len(message) > 140:
             self.bot.connection.privmsg(reply_to,
                 "Trim off %d characters, dickface" % (len(message) - 140))
             return
-        self.twitter.UpdateStatus(message)
+        self.bot.set_callback(self.twitter.UpdateStatus, lambda x: None,
+            args=[message])
 
     def handle_url(self, message, reply_to, url, sender, times=0):
         """Autodetect twitter urls and paste links."""
@@ -103,15 +112,20 @@ class TwitterPlugin(ButtPlugin):
                 if tweet_id[-1] == '#':
                     tweet_id = tweet_id[:-1]
                 apipath = "statuses/show/%s" % tweet_id
-                result = self.twitter.ApiCall(apipath, "GET", {})
-                if type(result) == urllib2.HTTPError or \
-                    type(result) ==  urllib2.URLError: 
-                    self.bot.connection.privmsg(reply_to, "Fail whale")
-                    return
-                new_text = u'<%s> %s' % (result['user']['screen_name'],
-                    result['text'])
-                new_text = new_text.encode('utf-8')
-                self.bot.connection.privmsg(reply_to, new_text)
+                
+                def process_tweet(result):
+                    if type(result) == urllib2.HTTPError or \
+                        type(result) ==  urllib2.URLError: 
+                        self.bot.connection.privmsg(reply_to, "Fail whale")
+                        return
+                    new_text = u'<%s> %s' % (result['user']['screen_name'],
+                        result['text'])
+                    new_text = new_text.encode('utf-8')
+                    self.bot.connection.privmsg(reply_to, new_text)
+              
+                self.bot.set_callback(self.twitter.ApiCall, process_tweet, 
+                    args=(apipath, "GET", {}))
+ 
 
     def initialize_twitter_auth(self):
         """Follow Twitter's idiotic authentication procedures"""

@@ -85,12 +85,18 @@ class TumblrPlugin(ButtPlugin):
         nick = nm_to_n(sender)
         api = Api(self.tumblog, self.email, self.password)
         caption = '%s\nvia %s' % (filtered_msg, nick)
+        def print_result(result):
+            if type(result) != Exception:
+                print "%s posted a %s to %s" % (nick, result['type'], result['url'])
+            else:
+                print "Call resulted in %s" % repr(result)
+
         try:
             try:
                 urls = api.readurls()
                 if url not in api.readurls():
-                    post = api.autopost_url(url, caption, tag_args)
-                    print "%s posted a %s to %s" % (nick, post['type'], post['url'])
+                    self.bot.set_callback(api.autopost_url, print_result,
+                        args=(url, caption, tag_args))
             except BrowserStateError:
                 # Skipping because of a mechanize error.
                 return
