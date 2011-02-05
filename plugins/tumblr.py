@@ -44,7 +44,7 @@ class TumblrPlugin(ButtPlugin):
                         'slug': 'quote'
                         }
                     def print_result(result):
-                        if type(result) != Exception:
+                        if type(result) != Exception and type(result) != TumblrError:
                             print "Quoted %s as %s to %s" % (user,
                                 result['url'], repr(reply_to))
                     
@@ -86,7 +86,7 @@ class TumblrPlugin(ButtPlugin):
         api = Api(self.tumblog, self.email, self.password)
         caption = '%s\nvia %s' % (filtered_msg, nick)
         def print_result(result):
-            if type(result) != Exception:
+            if type(result) != Exception and type(result) != TumblrError:
                 print "%s posted a %s to %s" % (nick, result['type'], result['url'])
             else:
                 print "Call resulted in %s" % repr(result)
