@@ -38,10 +38,18 @@ class TumblrPlugin(ButtPlugin):
             if last_said != None:
                 try:
                     api = Api(self.tumblog, self.email, self.password)
-                    post = api.write_regular(body = cgi.escape(last_said),
-                        tags = tag_args, slug = 'quote')
-                    print "Quoted %s as %s" % (user,
-                        post['url'])
+                    kwargs = {
+                        'body': cgi.escape(last_said),
+                        'tags': tag_args,
+                        'slug': 'quote'
+                        }
+                    def print_result(result):
+                        if type(result) != Exception:
+                            print "Quoted %s as %s to %s" % (user,
+                                result['url'], repr(reply_to))
+                    
+                    self.bot.set_callback(api.write_regular,
+                        print_result, kwargs=kwargs)
                     
                     #bot.say(channel, "Your quote: %s" % post['url'])
                 except TumblrError, e:

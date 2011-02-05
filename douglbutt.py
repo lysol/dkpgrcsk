@@ -7,6 +7,9 @@ from irclib import nm_to_n, nm_to_h, irc_lower, ip_numstr_to_quad, ip_quad_to_nu
 from optparse import OptionParser
 import ConfigParser
 import pyfiurl
+import threading, urllib2
+import Queue
+import random
 
 class MissingPluginSetting(Exception):
 
@@ -84,8 +87,33 @@ class ButtPlugin(object):
 class DouglButt(SingleServerIRCBot):
     """Douglbutt is an IRC bot."""
 
+    queue = Queue.Queue()
+    threads = []
+    callbacks = {}
+
+    def _handle_callback(self, func, tid, args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+        except Exception, e:
+            result = e
+        self.queue.put((tid, result))
+
+    def set_callback(self, func, callback, args=[], kwargs={}):
+        tid = random.randint(0,65535)
+        self.threads.append(threading.Thread(target=self._handle_callback,
+            args=[func, tid, args], kwargs=kwargs))
+        self.threads[-1].start()
+        self.callbacks[tid] = callback
+
     def _timed_events(self):
-        """Process timed events in plugins."""
+        """Process timed events in plugins, and thread callbacks."""
+        try:
+            result = self.queue.get(False)
+            if result[0] in self.callbacks.keys():
+                self.callbacks[result[0]](result[1])
+                del(self.callbacks[result[0]])
+        except Queue.Empty:
+            pass
         for plugin in self.plugins:
             if hasattr(plugin, 'timed'):
                 plugin.timed(self.ticker)
