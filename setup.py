@@ -21,7 +21,7 @@ setup(name='Douglbutt',
       license='BSD',
       classifiers=[
         "Development Status :: 4 - Beta",
-        "Intended Audience :: End Users/Desktop"
+        "Intended Audience :: End Users/Desktop",
         "License :: OSI Approved :: BSD License",
         "Operating System :: MacOS X",
         "Operating System :: Unix",
