@@ -235,15 +235,11 @@ def main():
     for option in config.options("douglbutt"):
         settings[option] = config.get("douglbutt", option)
 
-    if not settings.has_key('plugin_dir'):
-        settings['plugin_dir'] = 'plugins'
-
     # Tuple list of plugin classes and their settings to pass to the bot.
     plugins = []
 
-    mod = __import__(settings['plugin_dir'])
     for plugin in filter(lambda y: hasattr(y, 'yo_mtv_raps'),
-        mod.__dict__.values()):
+        plugins.__dict__.values()):
 
         if plugin.__provides__ is not None:
             plugin_settings = {}

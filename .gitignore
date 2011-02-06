@@ -1,3 +1,6 @@
 *.pyc
 *.conf
 .*
+build/*
+dist/*
+Douglbutt.egg-info/*
