@@ -23,7 +23,7 @@ setup(name='Douglbutt',
         "Development Status :: 4 - Beta",
         "Intended Audience :: End Users/Desktop",
         "License :: OSI Approved :: BSD License",
-        "Operating System :: MacOS X",
+        "Operating System :: MacOS :: MacOS X",
         "Operating System :: Unix",
         "Topic :: Communications :: Chat :: Internet Relay Chat",
         "Programming Language :: Python :: 2.7"
