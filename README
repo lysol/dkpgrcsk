@@ -30,3 +30,9 @@ merge in improvements from the forks.
 Twitter support requires nothing! That's because I just copied the API module
 into the plugin directory. It's also oauthified, so you don't have to freak
 out about your twitter anymore.
+
+INSTALLATION AND USE
+====================
+python setup.py install
+copy douglbutt.conf-dist and edit
+python -m douglbutt.__init__ config
