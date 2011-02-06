@@ -91,6 +91,8 @@ class DouglButt(SingleServerIRCBot):
     threads = []
     callbacks = {}
 
+        
+
     def _handle_callback(self, func, tid, args, **kwargs):
         try:
             result = func(*args, **kwargs)
@@ -145,6 +147,11 @@ class DouglButt(SingleServerIRCBot):
                 self.log[nick].pop(0)
 
 
+    def register_plugin(self, bpclass):
+
+        plugin_settings = self.settings[bpclass.__provides__]
+        self.plugins.append(bpclass(self, plugin_settings))
+
     def __init__(self, settings, plugins=[]):
 
         if not settings.has_key('port'):
@@ -152,14 +159,14 @@ class DouglButt(SingleServerIRCBot):
         else:
             port = settings['port']
 
+        self.settings = settings
+
         SingleServerIRCBot.__init__(self, [(settings['server'], port)], 
             settings['nick'], settings['user'])
         self.channel = settings['channel']
         self.plugins = []
         for plugin in plugins:
-            plugin_class = plugin[0]
-            plugin_settings = plugin[1]
-            self.plugins.append(plugin_class(self, plugin_settings))
+            self.register_plugin(plugin)
 
         self.ticker = 0
         self.ircobj.execute_delayed(1.0, self._timed_events)
@@ -244,7 +251,8 @@ def main():
                 for option in config.options(plugin.__provides__):
                     plugin_settings[option] = config.get(plugin.__provides__,
                         option)
-            plugins.append((plugin, plugin_settings))
+            settings[plugin.__provides__] = plugin_settings
+            plugins.append(plugin)
 
     bot = DouglButt(settings, plugins=plugins)
     bot.start()
