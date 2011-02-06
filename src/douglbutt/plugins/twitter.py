@@ -1,10 +1,10 @@
+from .._douglbutt import *
 import os
 import traceback
 from time import localtime, mktime, strptime
 import oauth2 as oauth
 from oauthtwitter import OAuthApi
 import cPickle
-from douglbutt import ButtPlugin
 from urlparse import urlparse
 import urllib2
 
@@ -76,8 +76,11 @@ class TwitterPlugin(ButtPlugin):
                 type(result) == urllib2.URLError: 
                 self.bot.connection.privmsg(reply_to, "Fail whale")
                 return
-            self.bot.connection.privmsg(reply_to, "Deleted tweet %s" % id)
-            self.last_untwit = mktime(localtime(None))
+            try:
+                self.bot.connection.privmsg(reply_to, "Deleted tweet %s" % id)
+                self.last_untwit = mktime(localtime(None))
+            except Exception, e:
+                print 'untwit error: %s because of %s' % (e, result)
         self.bot.set_callback(self.twitter.GetUserTimeline, run_timeline,
             kwargs={'options': {'screen_name': self.screen_name}})
 
@@ -118,8 +121,11 @@ class TwitterPlugin(ButtPlugin):
                         type(result) ==  urllib2.URLError: 
                         self.bot.connection.privmsg(reply_to, "Fail whale")
                         return
-                    new_text = u'<%s> %s' % (result['user']['screen_name'],
-                        result['text'])
+                    try:
+                        new_text = u'<%s> %s' % (result['user']['screen_name'],
+                            result['text'])
+                    except Exception, e:
+                        print 'Error received: %s because of %s' % (e, result)
                     new_text = new_text.encode('utf-8')
                     self.bot.connection.privmsg(reply_to, new_text)
               

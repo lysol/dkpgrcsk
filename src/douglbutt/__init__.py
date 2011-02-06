@@ -1,5 +1,4 @@
-from module import *
-import plugins
+from _douglbutt import *
 
 if __name__ == "__main__":
     main()

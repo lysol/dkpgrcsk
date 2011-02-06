@@ -1,5 +1,5 @@
 import time
-from douglbutt import ButtPlugin
+from .._douglbutt import *
 
 class Friend(ButtPlugin):
 

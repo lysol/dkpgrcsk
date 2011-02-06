@@ -1,4 +1,4 @@
-from douglbutt import ButtPlugin
+from .._douglbutt import *
 
 class EchoPlugin(ButtPlugin):
     

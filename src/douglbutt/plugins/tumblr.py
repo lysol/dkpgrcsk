@@ -1,10 +1,11 @@
-from douglbutt import ButtPlugin
+from .._douglbutt import *
 from pymblr import Api, TumblrError
 from ircbot import nm_to_n
 import cgi
 from mechanize._mechanize import BrowserStateError
 from time import sleep
-from urllib2 import URLError
+from urllib2 import URLError, HTTPError
+from mechanize import HTTPError as mechHTTPError
 
 class TumblrPlugin(ButtPlugin):
 
@@ -44,9 +45,11 @@ class TumblrPlugin(ButtPlugin):
                         'slug': 'quote'
                         }
                     def print_result(result):
-                        if type(result) != Exception and type(result) != TumblrError:
+                        try:    
                             print "Quoted %s as %s to %s" % (user,
                                 result['url'], repr(reply_to))
+                        except:
+                            print 'Could not quote: %s' % result
                     
                     self.bot.set_callback(api.write_regular,
                         print_result, kwargs=kwargs)
@@ -86,10 +89,12 @@ class TumblrPlugin(ButtPlugin):
         api = Api(self.tumblog, self.email, self.password)
         caption = '%s\nvia %s' % (filtered_msg, nick)
         def print_result(result):
-            if type(result) != Exception and type(result) != TumblrError:
+            print result
+            print type(result)
+            try:
                 print "%s posted a %s to %s" % (nick, result['type'], result['url'])
-            else:
-                print "Call resulted in %s" % repr(result)
+            except:
+                print "Call result: %s" % repr(result)
 
         try:
             try:

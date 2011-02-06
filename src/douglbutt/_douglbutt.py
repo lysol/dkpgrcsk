@@ -221,6 +221,7 @@ class DouglButt(SingleServerIRCBot):
 
 
 def main():
+    import plugins
     parser = OptionParser()
 
     (options, args) = parser.parse_args()
@@ -236,7 +237,7 @@ def main():
         settings[option] = config.get("douglbutt", option)
 
     # Tuple list of plugin classes and their settings to pass to the bot.
-    plugins = []
+    load_plugins = []
 
     for plugin in filter(lambda y: hasattr(y, 'yo_mtv_raps'),
         plugins.__dict__.values()):
@@ -248,9 +249,9 @@ def main():
                     plugin_settings[option] = config.get(plugin.__provides__,
                         option)
             settings[plugin.__provides__] = plugin_settings
-            plugins.append(plugin)
+            load_plugins.append(plugin)
 
-    bot = DouglButt(settings, plugins=plugins)
+    bot = DouglButt(settings, plugins=load_plugins)
     bot.start()
 
 if __name__ == "__main__":
