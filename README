@@ -4,15 +4,6 @@ FREDERICK DOUGLBUTT
 This is an ultra-simple (sorta) IRC bot that uses irclib. A little messy,
 but I'm ok with it. You can write new plugins pretty simply.
 
-  * Subclass ButtPlugin
-  * define __provides__
-  * define do_commands and optionally on_events
-  * define timed events (good example is twitter.py)
-  * edit plugins/__init__.py
-
-But, honestly, this bot isn't really suitable for anyone without a decent
-chunk of Python knowledge.
-
 REQUIREMENTS
 ============
 
@@ -23,7 +14,7 @@ Tumblr support requires:
   * elementtree http://effbot.org/zone/element-index.htm
   * mechanize http://wwwsearch.sourceforge.net/mechanize/
 
-All but poster and pymblr should be available via easy_install. Tumblr support
+All but pymblr should be available via easy_install. Tumblr support
 relies on pymblr's autopost_url, so any of the forks should be ok, and I try to
 merge in improvements from the forks.
 
@@ -33,6 +24,9 @@ out about your twitter anymore.
 
 INSTALLATION AND USE
 ====================
-python setup.py install
-copy douglbutt.conf-dist and edit
-python -m douglbutt.__init__ config
+    git clone git@github.com:lysol/douglbutt.git
+    cd douglbutt
+    python setup.py install
+    cp src/douglbutt.conf-dist ~/douglbutt.conf
+    vim ~/douglbutt.conf
+    python -m douglbutt.__init__ ~/douglbutt.conf
