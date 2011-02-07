@@ -28,5 +28,9 @@ setup(name='Douglbutt',
         "Topic :: Communications :: Chat :: Internet Relay Chat",
         "Programming Language :: Python :: 2.7"
       ],
-      download_url="http://github.com/lysol/douglbutt/tarball/v1.0" 
+      download_url="http://github.com/lysol/douglbutt/tarball/v1.0",
+      requires=(
+        'pymblr',
+        'python_irclib'
+        )
      )
