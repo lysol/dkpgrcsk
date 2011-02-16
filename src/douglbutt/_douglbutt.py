@@ -56,16 +56,6 @@ class ButtPlugin(object):
                 for url in urls:
                     self.handle_url(full_message, reply_to, url, sender)
 
-    def on_pubmsg(self, c, e):
-        """This is an example of a hooked event. This is also the default
-        method for handling commands, so if you are subclassing this,
-        make sure you call the original on_pubmsg."""
-        self._command_check(c, e, e.target())
-
-    def on_privmsg(self, c, e):
-        """Same thing as on_pubmsg, only for private messages."""
-        self._command_check(c, e, nm_to_n(e.source()))
-
     def timed(self, interval):
         """interval is the interal ticker for the timer. Use modulus to define
         more sparse intervals than 1 per second."""
@@ -125,9 +115,16 @@ class DouglButt(SingleServerIRCBot):
     def _hook(self, method_name, c, e):
         """Process event hooks."""
         for plugin in self.plugins:
+            the_class = type(plugin)
+            if method_name == 'on_pubmsg':
+                plugin._command_check(c, e, e.target())
+            elif method_name == 'on_privmsg':
+                plugin._command_check(c, e, nm_to_n(e.source()))
+            
             if hasattr(plugin, method_name):
-                method = getattr(plugin, method_name)
-                method(c, e)
+                #method = getattr(plugin, method_name)
+                method = getattr(the_class, method_name)
+                method(plugin, c, e)
 
     def _log(self, channel, nickmask, message):
         nick = nm_to_n(nickmask)
@@ -236,13 +233,19 @@ def main():
     for option in config.options("douglbutt"):
         settings[option] = config.get("douglbutt", option)
 
+    if 'load_plugins' in settings.keys():
+        settings['load_plugins'] = settings['load_plugins'].split(' ')
+    else:
+        settings['load_plugins'] = []
+
     # Tuple list of plugin classes and their settings to pass to the bot.
     load_plugins = []
 
     for plugin in filter(lambda y: hasattr(y, 'yo_mtv_raps'),
         plugins.__dict__.values()):
-
-        if plugin.__provides__ is not None:
+        if plugin.__provides__ is not None and plugin.__provides__ in \
+            settings['load_plugins']:
+            print 'Loading plugin %s' % plugin.__name__
             plugin_settings = {}
             if config.has_section(plugin.__provides__):
                 for option in config.options(plugin.__provides__):

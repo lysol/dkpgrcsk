@@ -5,6 +5,7 @@ nick=dougltest
 plugin_dir=plugins
 user=Frederick Douglbutt
 debug=True
+load_plugins=friend twitter tumblr markov
 
 [twitter]
 consumer_key=xxxxxx

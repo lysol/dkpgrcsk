@@ -3,6 +3,7 @@ from twitter import *
 from tumblr import *
 from echo import *
 from friend import *
+from markov import *
 
 class LogPlugin(ButtPlugin):
 

@@ -11,6 +11,10 @@ Tumblr support requires:
 
   * pymblr http://github.com/lysol/pymblr
 
+Markov support requires:
+
+  * marko http://github.com/rupa/marko
+
 INSTALLATION AND USE
 ====================
     git clone git@github.com:lysol/douglbutt.git
