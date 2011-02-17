@@ -88,10 +88,14 @@ class TwitterPlugin(ButtPlugin):
     def do_sup(self, message, reply_to):
         username = message.split(' ')[0]
         def run_timeline(timeline):
-            new_text = u'<%s> %s' % (timeline[0]['user']['screen_name'], 
-                timeline[0]['text'])
-            new_text = new_text.encode('utf-8')
-            self.bot.connection.privmsg(reply_to, new_text)
+            try:
+                new_text = u'<%s> %s' % (timeline[0]['user']['screen_name'],
+                    timeline[0]['text'])
+                new_text = new_text.encode('utf-8')
+                self.bot.connection.privmsg(reply_to, new_text)
+            except IndexError:
+                self.bot.connection.privmsg(reply_to,
+                    "Could not retrieve timeline.")
 
         self.bot.set_callback(self.twitter.GetUserTimeline, run_timeline,
             kwargs={'options': {'screen_name': username}})
@@ -115,7 +119,7 @@ class TwitterPlugin(ButtPlugin):
                 if tweet_id[-1] == '#':
                     tweet_id = tweet_id[:-1]
                 apipath = "statuses/show/%s" % tweet_id
-                
+
                 def process_tweet(result):
                     if type(result) == urllib2.HTTPError or \
                         type(result) ==  urllib2.URLError: 
@@ -128,10 +132,10 @@ class TwitterPlugin(ButtPlugin):
                         print 'Error received: %s because of %s' % (e, result)
                     new_text = new_text.encode('utf-8')
                     self.bot.connection.privmsg(reply_to, new_text)
-              
+
                 self.bot.set_callback(self.twitter.ApiCall, process_tweet, 
                     args=(apipath, "GET", {}))
- 
+
 
     def initialize_twitter_auth(self):
         """Follow Twitter's idiotic authentication procedures"""
