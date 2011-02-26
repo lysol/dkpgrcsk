@@ -178,7 +178,12 @@ class DouglButt(SingleServerIRCBot):
     def on_welcome(self, c, e):
         if self.debug:
             print e.arguments()[0]
-        c.join(self.channel)
+        if self.settings.has_key('pass'):
+            c.privmsg('nickserv', 'identify ' + self.settings['pass'])
+        if self.settings.has_key('key'):
+            c.join(self.channel, self.settings['key'])
+        else:
+            c.join(self.channel)
         self._hook('on_welcome', c, e)
 
     def on_privmsg(self, c, e):

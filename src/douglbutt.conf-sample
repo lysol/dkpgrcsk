@@ -1,7 +1,9 @@
 [douglbutt]
 server=irc.slashnet.org
 channel=#test
+#key=channel_key
 nick=dougltest
+#pass=nickserv_key
 plugin_dir=plugins
 user=Frederick Douglbutt
 debug=True
