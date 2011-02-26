@@ -45,6 +45,15 @@ class TwitterPlugin(ButtPlugin):
 
             self.bot.set_callback(self.twitter.GetMentions, handle_tweets)
 
+    def do_trends(self, message, reply_to):
+        def run_trends(trends):
+            data = trends['trends']
+            keywords = [t['name'] for t in data]
+            new_text = ", ".join(keywords)
+            new_text = new_text.encode('utf-8')
+            self.bot.connection.privmsg(reply_to, new_text)
+        self.bot.set_callback(self.twitter.ApiCall, run_trends,
+            args=("trends", "GET", {}))
 
     def do_quote(self, message, reply_to):
         args = message.strip().split(' ')
