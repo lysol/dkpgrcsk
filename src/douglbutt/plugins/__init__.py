@@ -4,6 +4,7 @@ from tumblr import *
 from echo import *
 from friend import *
 from markov import *
+from repost import *
 
 class LogPlugin(ButtPlugin):
 

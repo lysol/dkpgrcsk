@@ -7,7 +7,7 @@ nick=dougltest
 plugin_dir=plugins
 user=Frederick Douglbutt
 debug=True
-load_plugins=friend twitter tumblr markov
+load_plugins=friend twitter tumblr markov repost
 
 [twitter]
 consumer_key=xxxxxx
@@ -17,3 +17,6 @@ consumer_secret=xxxxxxxxxxxxxxxxxxxxxx
 email=dudes@websites.com
 password=tacosalad
 tumblog=dogslookinglikepeople.tumblr.com
+
+[repost]
+max_days=30
