@@ -3,11 +3,13 @@
 import os
 import sys
 from ircbot import SingleServerIRCBot
-from irclib import nm_to_n, nm_to_h, irc_lower, ip_numstr_to_quad, ip_quad_to_numstr
+from irclib import nm_to_n, nm_to_h, irc_lower, \
+    ip_numstr_to_quad, ip_quad_to_numstr
 from optparse import OptionParser
 import ConfigParser
 import pyfiurl
-import threading, urllib2
+import threading
+import urllib2
 import Queue
 import random
 import re
@@ -21,7 +23,7 @@ def host_matches(host, mask):
     newmask = re.sub('\*', '.*', re.sub('\?', '.', mask))
     r = re.compile(newmask, re.IGNORECASE)
     return r.match(host) is not None
-    
+
 
 class MissingPluginSetting(Exception):
 
@@ -82,7 +84,7 @@ class ButtPlugin(object):
         for setting in self.required_settings:
             if setting not in settings.keys():
                 raise MissingPluginSetting(self, setting)
-        for setting in settings:    
+        for setting in settings:
             setattr(self, setting, settings[setting])
         self.load_hook()
 
@@ -94,8 +96,6 @@ class DouglButt(SingleServerIRCBot):
     threads = []
     callbacks = {}
 
-        
-
     def _handle_callback(self, func, tid, args, **kwargs):
         try:
             result = func(*args, **kwargs)
@@ -104,7 +104,7 @@ class DouglButt(SingleServerIRCBot):
         self.queue.put((tid, result))
 
     def set_callback(self, func, callback, args=[], kwargs={}):
-        tid = random.randint(0,65535)
+        tid = random.randint(0, 65535)
         self.threads.append(threading.Thread(target=self._handle_callback,
             args=[func, tid, args], kwargs=kwargs))
         self.threads[-1].start()
@@ -133,7 +133,7 @@ class DouglButt(SingleServerIRCBot):
                 plugin._command_check(c, e, e.target())
             elif method_name == 'on_privmsg':
                 plugin._command_check(c, e, nm_to_n(e.source()))
-            
+
             if hasattr(plugin, method_name):
                 #method = getattr(plugin, method_name)
                 method = getattr(the_class, method_name)
@@ -142,20 +142,19 @@ class DouglButt(SingleServerIRCBot):
     def _log(self, channel, nickmask, message):
         nick = nm_to_n(nickmask)
         if channel:
-            if not self.log.has_key(channel):
+            if channel not in self.log:
                 self.log[channel] = {}
-            if not self.log[channel].has_key(nick):
+            if nick not in self.log[channel]:
                 self.log[channel][nick] = []
             self.log[channel][nick].append(message)
             while len(self.log[channel][nick]) > 100:
                 self.log[channel][nick].pop(0)
         else:
-            if not self.log.has_key(nick):
+            if nick not in self.log:
                 self.log[nick] = []
             self.log[nick].append(message)
             while len(self.log[nick]) > 100:
                 self.log[nick].pop(0)
-
 
     def register_plugin(self, bpclass):
 
@@ -164,14 +163,14 @@ class DouglButt(SingleServerIRCBot):
 
     def __init__(self, settings, plugins=[]):
 
-        if not settings.has_key('port'):
+        if 'port' not in settings:
             port = 6667
         else:
             port = settings['port']
 
         self.settings = settings
 
-        SingleServerIRCBot.__init__(self, [(settings['server'], port)], 
+        SingleServerIRCBot.__init__(self, [(settings['server'], port)],
             settings['nick'], settings['user'])
         self.channel = settings['channel']
         self.plugins = []
@@ -181,7 +180,7 @@ class DouglButt(SingleServerIRCBot):
         self.ticker = 0
         self.ircobj.execute_delayed(1.0, self._timed_events)
         self.log = {}
-        if settings.has_key('debug'):
+        if 'debug' in settings:
             self.debug = True
 
     def on_nicknameinuse(self, c, e):
@@ -191,9 +190,9 @@ class DouglButt(SingleServerIRCBot):
     def on_welcome(self, c, e):
         if self.debug:
             print e.arguments()[0]
-        if self.settings.has_key('pass'):
+        if 'pass' in self.settings:
             c.privmsg('nickserv', 'identify ' + self.settings['pass'])
-        if self.settings.has_key('key'):
+        if 'key' in self.settings:
             c.join(self.channel, self.settings['key'])
         else:
             c.join(self.channel)
@@ -213,7 +212,7 @@ class DouglButt(SingleServerIRCBot):
     def on_join(self, c, e):
         if self.debug:
             print "Joined %s" % e.target()
-        if not self.log.has_key(e.target()):
+        if e.target() not in self.log:
             self.log[e.target()] = {}
         self._hook('on_join', c, e)
 
@@ -221,10 +220,11 @@ class DouglButt(SingleServerIRCBot):
         if self.debug:
             print "Parted %s" % e.target()
         self._hook('on_part', c, e)
-    
+
     def on_kick(self, c, e):
         if self.debug:
-            print "%s kicked from %s by %s" % (e.arguments()[0], e.target(), e.source())
+            print "%s kicked from %s by %s" % (e.arguments()[0], e.target(),
+                e.source())
         self._hook('on_kick', c, e)
 
     def on_pubmsg(self, c, e):
@@ -245,7 +245,7 @@ def main():
         print "Usage: douglputt.py configfile"
         exit(1)
 
-    settings = {} 
+    settings = {}
     config = ConfigParser.ConfigParser()
     config.read(args[0])
     for option in config.options("douglbutt"):

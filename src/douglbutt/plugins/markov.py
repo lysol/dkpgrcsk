@@ -1,6 +1,7 @@
 from .._douglbutt import *
 import marko
 
+
 class Markov(ButtPlugin):
 
     __provides__ = 'markov'

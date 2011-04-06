@@ -7,6 +7,7 @@ from time import sleep
 from urllib2 import URLError, HTTPError
 from mechanize import HTTPError as mechHTTPError
 
+
 class TumblrPlugin(ButtPlugin):
 
     __provides__ = 'tumblr'
@@ -21,18 +22,16 @@ class TumblrPlugin(ButtPlugin):
         new_args = message.strip().split(' ')
         user = new_args[0]
         tag_args = filter(
-            lambda arg: len(arg) > 0 and arg[0] == '#'
-            ,new_args
+            lambda arg: len(arg) > 0 and arg[0] == '#', new_args
         )
         real_args = filter(
-            lambda arg: len(arg) > 0 and arg[0] != '#'
-            ,new_args
+            lambda arg: len(arg) > 0 and arg[0] != '#', new_args
         )
         # remove hash
         tag_args = [arg[1:] for arg in tag_args]
-        
+
         print "real args: %s\ntag args: %s" % (real_args, tag_args)
-        
+
         if len(real_args) == 1:
             # quote a single person
             last_said = self.bot.log[reply_to][user][-1].strip()
@@ -44,16 +43,17 @@ class TumblrPlugin(ButtPlugin):
                         'tags': tag_args,
                         'slug': 'quote'
                         }
+
                     def print_result(result):
-                        try:    
+                        try:
                             print "Quoted %s as %s to %s" % (user,
                                 result['url'], repr(reply_to))
                         except:
                             print 'Could not quote: %s' % result
-                    
+
                     self.bot.set_callback(api.write_regular,
                         print_result, kwargs=kwargs)
-                    
+
                     #bot.say(channel, "Your quote: %s" % post['url'])
                 except TumblrError, e:
                     self.bot.connection.privmsg(reply_to, "Tumblr posting " + \
@@ -67,32 +67,31 @@ class TumblrPlugin(ButtPlugin):
                     "That person hasn't said anything, according to my " + \
                     "recollection. Or perhaps you are fat.")
 
-
     def handle_url(self, message, reply_to, url, sender, times=0):
         new_args = message.strip().split(' ')
-        
+
         tag_args = filter(
-            lambda arg: len(arg) > 0 and arg[0] == '#'
-            ,new_args
+            lambda arg: len(arg) > 0 and arg[0] == '#', new_args
         )
 
         real_args = filter(
-            lambda arg: len(arg) > 0 and arg[0] != '#'
-            ,new_args
-        ) 
+            lambda arg: len(arg) > 0 and arg[0] != '#', new_args
+        )
 
-        filtered_msg = ' '.join(real_args).replace(url,'').replace(':','')
+        filtered_msg = ' '.join(real_args).replace(url, '').replace(':', '')
 
         times = times + 1
         print "Attempting to post %s for the #%i time" % (url, times)
         nick = nm_to_n(sender)
         api = Api(self.tumblog, self.email, self.password)
         caption = '%s\nvia %s' % (filtered_msg, nick)
+
         def print_result(result):
             print result
             print type(result)
             try:
-                print "%s posted a %s to %s" % (nick, result['type'], result['url'])
+                print "%s posted a %s to %s" % (nick, result['type'],
+                    result['url'])
             except:
                 print "Call result: %s" % repr(result)
 
@@ -115,7 +114,8 @@ class TumblrPlugin(ButtPlugin):
                 print "Error encountered, trying it again."
                 # try it again, a couple of times.
                 sleep(3)
-                self.handle_url(self, message, reply_to, url, sender, times=times)
+                self.handle_url(self, message, reply_to, url, sender,
+                    times=times)
             else:
                 print e
                 #bot.say(channel, "Something horrible happened.")

@@ -6,6 +6,7 @@ from friend import *
 from markov import *
 from repost import *
 
+
 class LogPlugin(ButtPlugin):
 
     __provides__ = 'log'
