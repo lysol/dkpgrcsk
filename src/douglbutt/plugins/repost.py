@@ -16,7 +16,16 @@ class RepostPlugin(ButtPlugin):
         pruned = filter(lambda t: t[1] > cutoff, tups)
         self.urls = dict(pruned)
 
+    def host_ignored(self, host):
+        for mask in self.ignore:
+            if host_matches(host, mask):
+                return True
+        return False
+
     def handle_url(self, message, reply_to, url, sender, times=0):
+        # Check the ignore list
+        if self.host_ignored(sender):
+            return
         if url in self.urls.keys():
             last_time = self.urls[url]
             self.bot.connection.privmsg(reply_to,
@@ -28,3 +37,7 @@ class RepostPlugin(ButtPlugin):
     def __init__(self, bot, settings):
         self.urls = {}
         ButtPlugin.__init__(self, bot, settings)
+        if not hasattr(self, 'ignore'):
+            self.ignore = []
+        if hasattr(self, 'ignore') and not (type(self.ignore) == list):
+            self.ignore = [self.ignore]

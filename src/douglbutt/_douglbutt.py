@@ -10,6 +10,18 @@ import pyfiurl
 import threading, urllib2
 import Queue
 import random
+import re
+
+
+def host_matches(host, mask):
+    """Check if a mask matches a mask.
+
+    Returns true if the mask matches, otherwise false.
+    """
+    newmask = re.sub('\*', '.*', re.sub('\?', '.', mask))
+    r = re.compile(newmask, re.IGNORECASE)
+    return r.match(host) is not None
+    
 
 class MissingPluginSetting(Exception):
 
@@ -70,6 +82,7 @@ class ButtPlugin(object):
         for setting in self.required_settings:
             if setting not in settings.keys():
                 raise MissingPluginSetting(self, setting)
+        for setting in settings:    
             setattr(self, setting, settings[setting])
         self.load_hook()
 
