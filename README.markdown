@@ -11,6 +11,8 @@ Tumblr support requires:
 
   * [pymblr](http://github.com/lysol/pymblr "pymblr")
 
+Markov support requires:
+
   * [marko](http://github.com/rupa/marko "marko")
 
 INSTALLATION AND USE
