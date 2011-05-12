@@ -65,9 +65,11 @@ class ButtPlugin(object):
                 self.bot.connection.privmsg(reply_to, "An error occurred.")
 
         if hasattr(self, 'handle_url'):
-            urls = pyfiurl.grab(full_message)
+            urls = filter(lambda u: u not in self.bot.settings['banned_urls'], 
+                pyfiurl.grab(full_message))
             if urls:
                 for url in urls:
+                    print 'fart'
                     self.handle_url(full_message, reply_to, url, sender)
 
     def timed(self, interval):
@@ -251,7 +253,10 @@ def main():
     for option in config.options("douglbutt"):
         settings[option] = config.get("douglbutt", option)
 
-    if 'load_plugins' in settings.keys():
+    if 'banned_urls' not in settings:
+        settings['banned_urls'] = []
+
+    if 'load_plugins' in settings:
         settings['load_plugins'] = settings['load_plugins'].split(' ')
     else:
         settings['load_plugins'] = []

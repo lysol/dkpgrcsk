@@ -8,6 +8,7 @@ plugin_dir=plugins
 user=Frederick Douglbutt
 debug=True
 load_plugins=friend twitter tumblr markov repost
+banned_urls=http://foxnews.com http://dailykos.com
 
 [twitter]
 consumer_key=xxxxxx
