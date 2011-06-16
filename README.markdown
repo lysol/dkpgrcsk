@@ -7,6 +7,8 @@ but I'm ok with it. You can write new plugins pretty simply.
 REQUIREMENTS
 ============
 
+Main requirements: irclib. The plugins have their own requirements.
+
 Tumblr support requires:
 
   * [pymblr](http://github.com/lysol/pymblr "pymblr")
@@ -20,6 +22,6 @@ INSTALLATION AND USE
     git clone git@github.com:lysol/douglbutt.git
     cd douglbutt
     python setup.py install
-    cp src/douglbutt.conf-dist ~/douglbutt.conf
+    cp src/douglbutt.conf-sample ~/douglbutt.conf
     vim ~/douglbutt.conf
     python -m douglbutt.__init__ ~/douglbutt.conf
