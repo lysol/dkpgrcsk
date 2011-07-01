@@ -82,7 +82,11 @@ class TwitterPlugin(ButtPlugin):
 
         def run_timeline(timeline):
 
-            id = timeline[0]['id']
+            try:
+                id = timeline[0]['id']
+            except IndexError:
+                self.bot.connection.privmsg(reply_To, "Fail whale (Try again)")
+                return
             result = self.twitter.ApiCall("statuses/destroy/%s" % id, "POST",
                 {})
             if type(result) == urllib2.HTTPError or \
@@ -116,7 +120,7 @@ class TwitterPlugin(ButtPlugin):
     def do_twit(self, message, reply_to):
         if len(message) > 140:
             self.bot.connection.privmsg(reply_to,
-                "Trim off %d characters, dickface" % (len(message) - 140))
+                "Tweet too long. Trim off %d characters." % (len(message) - 140))
             return
         self.bot.set_callback(self.twitter.UpdateStatus, lambda x: None,
             args=[message])
