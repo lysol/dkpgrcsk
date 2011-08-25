@@ -1,4 +1,4 @@
-FREDERICK DOUGLBUTT
+dkpgrcsk
 ===================
 
 This is an ultra-simple (sorta) IRC bot that uses irclib. A little messy,
@@ -19,9 +19,9 @@ Markov support requires:
 
 INSTALLATION AND USE
 ====================
-    git clone git@github.com:lysol/douglbutt.git
-    cd douglbutt
+    git clone git@github.com:lysol/dkpgrcsk.git
+    cd dkpgrcsk
     python setup.py install
-    cp src/douglbutt.conf-sample ~/douglbutt.conf
-    vim ~/douglbutt.conf
-    python -m douglbutt.__init__ ~/douglbutt.conf
+    cp src/dkpgrcsk.conf-sample ~/dkpgrcsk.conf
+    vim ~/dkpgrcsk.conf
+    python -m dkpgrcsk.__init__ ~/dkpgrcsk.conf
