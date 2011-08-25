@@ -1,11 +1,11 @@
-[douglbutt]
+[dkpgrcsk]
 server=irc.slashnet.org
 channel=#test
 #key=channel_key
 nick=dougltest
 #pass=nickserv_key
 plugin_dir=plugins
-user=Frederick Douglbutt
+user=jfkdheueosicdkfl
 debug=True
 load_plugins=friend twitter tumblr markov repost
 banned_urls=http://foxnews.com http://dailykos.com

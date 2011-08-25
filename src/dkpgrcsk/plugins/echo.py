@@ -1,7 +1,7 @@
-from .._douglbutt import *
+from .._dkpgrcsk import *
 
 
-class EchoPlugin(ButtPlugin):
+class EchoPlugin(DPlugin):
 
     __provides__ = 'echo'
 

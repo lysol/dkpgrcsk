@@ -1,4 +1,4 @@
-from .._douglbutt import *
+from .._dkpgrcsk import *
 import os
 import traceback
 from time import localtime, mktime, strptime
@@ -9,7 +9,7 @@ from urlparse import urlparse
 import urllib2
 
 
-class TwitterPlugin(ButtPlugin):
+class TwitterPlugin(DPlugin):
 
     __provides__ = 'twitter'
 

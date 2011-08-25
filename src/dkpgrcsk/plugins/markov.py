@@ -1,8 +1,8 @@
-from .._douglbutt import *
+from .._dkpgrcsk import *
 import marko
 
 
-class Markov(ButtPlugin):
+class Markov(DPlugin):
 
     __provides__ = 'markov'
 

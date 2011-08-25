@@ -1,8 +1,8 @@
 import datetime
-from .._douglbutt import *
+from .._dkpgrcsk import *
 
 
-class RepostPlugin(ButtPlugin):
+class RepostPlugin(DPlugin):
 
     __provides__ = 'repost'
 
@@ -37,7 +37,7 @@ class RepostPlugin(ButtPlugin):
 
     def __init__(self, bot, settings):
         self.urls = {}
-        ButtPlugin.__init__(self, bot, settings)
+        DPlugin.__init__(self, bot, settings)
         if not hasattr(self, 'ignore'):
             self.ignore = []
         if hasattr(self, 'ignore') and not (type(self.ignore) == list):

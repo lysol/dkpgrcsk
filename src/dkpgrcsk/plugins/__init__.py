@@ -1,4 +1,4 @@
-from .._douglbutt import *
+from .._dkpgrcsk import *
 from twitter import *
 from tumblr import *
 from echo import *
@@ -7,7 +7,7 @@ from markov import *
 from repost import *
 
 
-class LogPlugin(ButtPlugin):
+class LogPlugin(DPlugin):
 
     __provides__ = 'log'
 

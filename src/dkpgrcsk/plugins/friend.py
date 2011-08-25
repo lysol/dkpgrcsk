@@ -1,8 +1,8 @@
 import time
-from .._douglbutt import *
+from .._dkpgrcsk import *
 
 
-class Friend(ButtPlugin):
+class Friend(DPlugin):
 
     __provides__ = 'friend'
     join_pending = None

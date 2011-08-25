@@ -31,7 +31,7 @@ class MissingPluginSetting(Exception):
         return "%s requires setting '%s'" % (plugin, setting)
 
 
-class ButtPlugin(object):
+class DPlugin(object):
     """Provide an abstracted functionality to the IRC bot. Handles IRC events
     if they are defined."""
 
@@ -91,8 +91,8 @@ class ButtPlugin(object):
         self.load_hook()
 
 
-class DouglButt(SingleServerIRCBot):
-    """Douglbutt is an IRC bot."""
+class Dkpgrcsk(SingleServerIRCBot):
+    """Dkpgrcsk is an IRC bot."""
 
     queue = Queue.Queue()
     threads = []
@@ -250,8 +250,8 @@ def main():
     settings = {}
     config = ConfigParser.ConfigParser()
     config.read(args[0])
-    for option in config.options("douglbutt"):
-        settings[option] = config.get("douglbutt", option)
+    for option in config.options("dkpgrcsk"):
+        settings[option] = config.get("dkpgrcsk", option)
 
     if 'banned_urls' not in settings:
         settings['banned_urls'] = []
@@ -277,7 +277,7 @@ def main():
             settings[plugin.__provides__] = plugin_settings
             load_plugins.append(plugin)
 
-    bot = DouglButt(settings, plugins=load_plugins)
+    bot = dkpgrcsk(settings, plugins=load_plugins)
     bot.start()
 
 if __name__ == "__main__":

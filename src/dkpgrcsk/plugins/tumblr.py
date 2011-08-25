@@ -1,4 +1,4 @@
-from .._douglbutt import *
+from .._dkpgrcsk import *
 from pymblr import Api, TumblrError
 from ircbot import nm_to_n
 import cgi
@@ -8,7 +8,7 @@ from urllib2 import URLError, HTTPError
 from mechanize import HTTPError as mechHTTPError
 
 
-class TumblrPlugin(ButtPlugin):
+class TumblrPlugin(DPlugin):
 
     __provides__ = 'tumblr'
 

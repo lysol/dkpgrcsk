@@ -8,15 +8,15 @@ except ImportError:
     from setuptools import setup, find_packages
 
 
-setup(name='Douglbutt',
-      version='1.0',
+setup(name='dkpgrcsk',
+      version='1.1',
       description='Simple, extensible irclib based IRC bot.',
       author='Derek Arnold',
-      author_email='derek@brainindustries.com',
-      url='http://lysol.github.com/douglbutt',
-      packages=['douglbutt', 'douglbutt/plugins'],
-      package_dir={'douglbutt': 'src/douglbutt',
-            'douglbutt/plugins': 'src/douglbutt/plugins'},
+      author_email='derek@derekarnold.net',
+      url='http://lysol.github.com/dkpgrcsk',
+      packages=['dkpgrcsk', 'dkpgrcsk/plugins'],
+      package_dir={'dkpgrcsk': 'src/dkpgrcsk',
+            'dkpgrcsk/plugins': 'src/dkpgrcsk/plugins'},
       include_package_data=True,
       license='BSD',
       classifiers=[
@@ -28,7 +28,7 @@ setup(name='Douglbutt',
         "Topic :: Communications :: Chat :: Internet Relay Chat",
         "Programming Language :: Python :: 2.7"
       ],
-      download_url="http://github.com/lysol/douglbutt/tarball/v1.0",
+      download_url="http://github.com/lysol/dkpgrcsk/tarball/v1.1",
       requires=(
         'pymblr',
         'python_irclib'
