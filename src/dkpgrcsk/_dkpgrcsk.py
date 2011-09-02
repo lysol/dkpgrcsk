@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-import sys
+import sys, pdb
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_h, irc_lower, \
     ip_numstr_to_quad, ip_quad_to_numstr, mask_matches
@@ -33,16 +33,15 @@ def host_matches(host, mask):
 def admin_command(func):
     """Admin command decorator. Use the config directive to determine if the
     user can even call this command via the channel."""
-    inst = func.im_self
-    if func not in inst.admin_commands:
-        inst.admin_commands.append(func)
-    def wrapped(self, connection, reply_to):
+    def wrapped(self, connection, reply_to, event):
         try:
-            admin_mask = im_self.bot.settings['admin_mask']
+            admin_mask = self.bot.settings['admin_mask']
         except KeyError:
             raise Exception("No admin mask specified in the settings file.")
-        if admin_mask and host_matches(reply_to.source(), admin_mask):
+        if admin_mask and host_matches(event.source(), admin_mask):
             func(self, connection, reply_to)
+    # So we can find it later.
+    setattr(wrapped, '__admin_command__', True)
     return wrapped
 
 class MissingPluginSetting(Exception):
@@ -64,8 +63,9 @@ class DPlugin(object):
 
     required_settings = ()
 
-    def _error(self, exception):
-        print "EXCEPTION: %s %s" % (repr(exception), exception)
+    def _error(self, exp):
+        print "EXCEPTION: %s %s" % (repr(exp), exp)
+        traceback.print_exc(file=sys.stderr)
 
     def _command_check(self, c, e, reply_to):
         """Process commands that have corresponding methods."""
@@ -79,7 +79,12 @@ class DPlugin(object):
         if hasattr(self, method_name):
             method = getattr(self, method_name)
             try:
-                method(message, reply_to)
+                # If it's been decorated by @admin_command, it'll have
+                # this attr.
+                if hasattr(method, '__admin_command__'):
+                    method(message, reply_to, e)
+                else:
+                    method(message, reply_to)
             except Exception as e:
                 self._error(e)
                 self.bot.connection.privmsg(reply_to, "An error occurred.")
@@ -180,15 +185,20 @@ class Dkpgrcsk(SingleServerIRCBot):
                 self.log[nick].pop(0)
 
     def register_plugin(self, bpclass):
-
         plugin_settings = self.settings[bpclass.__provides__]
+        if not hasattr(self, 'plugins'):
+            self.plugins = []
+        for i, plugin in enumerate(self.plugins):
+            if plugin.__class__ == bpclass:
+                self.plugins[i] = bpclass(self, plugin_settings)
+                return
         self.plugins.append(bpclass(self, plugin_settings))
 
     def reload(self):
-        self.reload_config()
-        self.reload_plugins()
+        self.reload_settings()
+        self.load_plugins()
 
-    def reload_config(self):
+    def reload_settings(self):
         settings = {}
         config = ConfigParser.ConfigParser()
         config.read(self.config_file)
@@ -203,14 +213,20 @@ class Dkpgrcsk(SingleServerIRCBot):
         else:
             settings['load_plugins'] = []
         self.settings = settings
+        self.config = config
+        print "Settings reloaded."
 
-    def reload_plugins(self):
-        try:
-            reload(plugins)
-        except Exception:
-            print "ERROR: Could not reload plugins."
-            print traceback.print_exc(file=sys.stderr)
-            return
+    def load_plugins(self, reload_plugins=False):
+        if reload_plugins:
+            try:
+                global plugins
+                reload(plugins)
+            except Exception:
+                print "ERROR: Could not reload plugins."
+                print traceback.print_exc(file=sys.stderr)
+                return
+        else:
+            import plugins
 
         # Tuple list of plugin classes and their settings to pass to the bot.
         load_plugins = []
@@ -221,37 +237,30 @@ class Dkpgrcsk(SingleServerIRCBot):
                 self.settings['load_plugins']:
                 print 'Loading plugin %s' % plugin.__name__
                 plugin_settings = {}
-                if config.has_section(plugin.__provides__):
-                    for option in config.options(plugin.__provides__):
-                        plugin_settings[option] = config.get(plugin.__provides__,
-                            option)
+                if self.config.has_section(plugin.__provides__):
+                    for option in self.config.options(plugin.__provides__):
+                        plugin_settings[option] = self.config.get(
+                                plugin.__provides__, option)
                 self.settings[plugin.__provides__] = plugin_settings
                 load_plugins.append(plugin)
-        self.plugins = plugins
-
-    def __init__(self, config_file='dkpgrcsk.conf'):
-
-        self.config_file = config_file
-        self.reload()
-
-        if 'port' not in settings:
-            port = 6667
-        else:
-            port = settings['port']
-
-        self.settings = settings
-
-        SingleServerIRCBot.__init__(self, [(settings['server'], port)],
-            settings['nick'], settings['user'])
-        self.channel = settings['channel']
-        self.plugins = []
-        for plugin in plugins:
+        for plugin in load_plugins:
             self.register_plugin(plugin)
 
+    def __init__(self, config_file='dkpgrcsk.conf'):
+        self.config_file = config_file
+        self.reload_settings()
+        if 'port' not in self.settings:
+            port = 6667
+        else:
+            port = self.settings['port']
+        SingleServerIRCBot.__init__(self, [(self.settings['server'], port)],
+            self.settings['nick'], self.settings['user'])
+        self.channel = self.settings['channel']
+        self.load_plugins()
         self.ticker = 0
         self.ircobj.execute_delayed(1.0, self._timed_events)
         self.log = {}
-        if 'debug' in settings:
+        if 'debug' in self.settings:
             self.debug = True
 
     def on_nicknameinuse(self, c, e):
@@ -307,7 +316,6 @@ class Dkpgrcsk(SingleServerIRCBot):
 
 
 def main():
-    import plugins
     parser = OptionParser()
 
     (options, args) = parser.parse_args()
@@ -318,7 +326,7 @@ def main():
 
     config_file = args[0]
 
-    bot = Dkpgrcsk(settings, config_file=config_file)
+    bot = Dkpgrcsk(config_file=config_file)
     bot.start()
 
 if __name__ == "__main__":
