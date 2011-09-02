@@ -23,29 +23,29 @@ class TwitterPlugin(DPlugin):
         Check for replies using the API. Supply a since_id per the API,
         but also filter on date and time in case the bot is just starting up.
         """
-        if ticker % 30 == 0 or ticker == 0:
+        if ticker % 45 == 0 or ticker == 0:
             def handle_tweets(tweets):
+                if isinstance(tweets, Exception):
+                    print str(tweets)
+                    return
                 if len(tweets) == 0:
                     return
-                if self.last_id is None:
-                    # This is the first mention pull since starting up.
-                    # Just get the last ID and set it.
-                    self.last_id = tweets[0]['id']
-                    return
+                if self.last_id is not None:
+                    for tweet in tweets:
+                        new_text = u'<%s> %s' % (tweet['user']['screen_name'],
+                            tweet['text'])
+                        new_text = new_text.encode('utf-8')
 
-                for tweet in tweets:
-                    new_text = u'<%s> %s' % (tweet['user']['screen_name'],
-                        tweet['text'])
-                    new_text = new_text.encode('utf-8')
-
-                    for chname, chobj in self.bot.channels.items():
-                        self.bot.connection.privmsg(chname,
-                            new_text)
-                    self.last_id = tweet['id']
+                        for chname, chobj in self.bot.channels.items():
+                            self.bot.connection.privmsg(chname,
+                                new_text)
+	        self.last_id = tweets[0]['id']
 
             if self.last_id is not None:
                 kwargs = {
-                    'since_id': self.last_id
+                    'options': {
+                        'since_id': self.last_id
+                     }
                 }
             else:
                 kwargs = {}
