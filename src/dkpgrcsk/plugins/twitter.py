@@ -19,32 +19,38 @@ class TwitterPlugin(DPlugin):
         )
 
     def timed(self, ticker):
-        if ticker % 120 == 0 or ticker == 0:
+	"""
+        Check for replies using the API. Supply a since_id per the API,
+        but also filter on date and time in case the bot is just starting up.
+        """
+        if ticker % 45 == 0 or ticker == 0:
             def handle_tweets(tweets):
-                try:
-                    times = [strptime(tweet['created_at'],
-                        '%a %b %d %H:%M:%S +0000 %Y') \
-                        for tweet in tweets]
-                except TypeError:
+                if isinstance(tweets, Exception):
+                    print str(tweets)
                     return
-                if len(times) > 0:
-                    max_time = times[0]
-                else:
+                if len(tweets) == 0:
                     return
-                for tweet in tweets:
-                    time_posted = strptime(tweet['created_at'],
-                        '%a %b %d %H:%M:%S +0000 %Y')
-                    new_text = u'<%s> %s' % (tweet['user']['screen_name'],
-                        tweet['text'])
-                    new_text = new_text.encode('utf-8')
+                if self.last_id is not None:
+                    for tweet in tweets:
+                        new_text = u'<%s> %s' % (tweet['user']['screen_name'],
+                            tweet['text'])
+                        new_text = new_text.encode('utf-8')
 
-                    if time_posted > localtime(self.last_reply_time):
                         for chname, chobj in self.bot.channels.items():
                             self.bot.connection.privmsg(chname,
                                 new_text)
-                self.last_reply_time = mktime(max_time)
+	        self.last_id = tweets[0]['id']
 
-            self.bot.set_callback(self.twitter.GetMentions, handle_tweets)
+            if self.last_id is not None:
+                kwargs = {
+                    'options': {
+                        'since_id': self.last_id
+                     }
+                }
+            else:
+                kwargs = {}
+            self.bot.set_callback(self.twitter.GetMentions, handle_tweets,
+                kwargs=kwargs)
 
     def do_trends(self, message, reply_to):
         def run_trends(trends):
@@ -177,5 +183,5 @@ class TwitterPlugin(DPlugin):
         while not os.path.exists('.twitter_auth'):
             self.initialize_twitter_auth()
         self.initialize_twitter()
-        self.last_reply_time = mktime(localtime(None))
+        self.last_id = None
         self.last_untwit = mktime(localtime(None))
