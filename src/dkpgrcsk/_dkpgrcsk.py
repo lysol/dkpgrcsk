@@ -4,7 +4,7 @@ import os
 import sys
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_h, irc_lower, \
-    ip_numstr_to_quad, ip_quad_to_numstr
+    ip_numstr_to_quad, ip_quad_to_numstr, mask_matches
 from optparse import OptionParser
 import ConfigParser
 import pyfiurl
@@ -13,17 +13,37 @@ import urllib2
 import Queue
 import random
 import re
-
+import traceback
 
 def host_matches(host, mask):
     """Check if a mask matches a mask.
 
     Returns true if the mask matches, otherwise false.
     """
+    newmask = irc_lower(mask)
+    host = irc_lower(host)
+    newmask = newmask.replace('\\', '\\\\')
+    for ch in ".$|[](){}+":
+        newmask = newmask.replace(ch, "\\" + ch)
     newmask = re.sub('\*', '.*', re.sub('\?', '.', mask))
     r = re.compile(newmask, re.IGNORECASE)
     return r.match(host) is not None
 
+
+def admin_command(func):
+    """Admin command decorator. Use the config directive to determine if the
+    user can even call this command via the channel."""
+    inst = func.im_self
+    if func not in inst.admin_commands:
+        inst.admin_commands.append(func)
+    def wrapped(self, connection, reply_to):
+        try:
+            admin_mask = im_self.bot.settings['admin_mask']
+        except KeyError:
+            raise Exception("No admin mask specified in the settings file.")
+        if admin_mask and host_matches(reply_to.source(), admin_mask):
+            func(self, connection, reply_to)
+    return wrapped
 
 class MissingPluginSetting(Exception):
 
@@ -83,6 +103,7 @@ class DPlugin(object):
 
     def __init__(self, bot, settings):
         self.bot = bot
+        self.admin_commands = []
         for setting in self.required_settings:
             if setting not in settings.keys():
                 raise MissingPluginSetting(self, setting)
@@ -163,7 +184,55 @@ class Dkpgrcsk(SingleServerIRCBot):
         plugin_settings = self.settings[bpclass.__provides__]
         self.plugins.append(bpclass(self, plugin_settings))
 
-    def __init__(self, settings, plugins=[]):
+    def reload(self):
+        self.reload_config()
+        self.reload_plugins()
+
+    def reload_config(self):
+        settings = {}
+        config = ConfigParser.ConfigParser()
+        config.read(self.config_file)
+        for option in config.options("dkpgrcsk"):
+            settings[option] = config.get("dkpgrcsk", option)
+
+        if 'banned_urls' not in settings:
+            settings['banned_urls'] = []
+
+        if 'load_plugins' in settings:
+            settings['load_plugins'] = settings['load_plugins'].split(' ')
+        else:
+            settings['load_plugins'] = []
+        self.settings = settings
+
+    def reload_plugins(self):
+        try:
+            reload(plugins)
+        except Exception:
+            print "ERROR: Could not reload plugins."
+            print traceback.print_exc(file=sys.stderr)
+            return
+
+        # Tuple list of plugin classes and their settings to pass to the bot.
+        load_plugins = []
+
+        for plugin in filter(lambda y: hasattr(y, 'yo_mtv_raps'),
+            plugins.__dict__.values()):
+            if plugin.__provides__ is not None and plugin.__provides__ in \
+                self.settings['load_plugins']:
+                print 'Loading plugin %s' % plugin.__name__
+                plugin_settings = {}
+                if config.has_section(plugin.__provides__):
+                    for option in config.options(plugin.__provides__):
+                        plugin_settings[option] = config.get(plugin.__provides__,
+                            option)
+                self.settings[plugin.__provides__] = plugin_settings
+                load_plugins.append(plugin)
+        self.plugins = plugins
+
+    def __init__(self, config_file='dkpgrcsk.conf'):
+
+        self.config_file = config_file
+        self.reload()
 
         if 'port' not in settings:
             port = 6667
@@ -247,37 +316,9 @@ def main():
         print "Usage: douglputt.py configfile"
         exit(1)
 
-    settings = {}
-    config = ConfigParser.ConfigParser()
-    config.read(args[0])
-    for option in config.options("dkpgrcsk"):
-        settings[option] = config.get("dkpgrcsk", option)
+    config_file = args[0]
 
-    if 'banned_urls' not in settings:
-        settings['banned_urls'] = []
-
-    if 'load_plugins' in settings:
-        settings['load_plugins'] = settings['load_plugins'].split(' ')
-    else:
-        settings['load_plugins'] = []
-
-    # Tuple list of plugin classes and their settings to pass to the bot.
-    load_plugins = []
-
-    for plugin in filter(lambda y: hasattr(y, 'yo_mtv_raps'),
-        plugins.__dict__.values()):
-        if plugin.__provides__ is not None and plugin.__provides__ in \
-            settings['load_plugins']:
-            print 'Loading plugin %s' % plugin.__name__
-            plugin_settings = {}
-            if config.has_section(plugin.__provides__):
-                for option in config.options(plugin.__provides__):
-                    plugin_settings[option] = config.get(plugin.__provides__,
-                        option)
-            settings[plugin.__provides__] = plugin_settings
-            load_plugins.append(plugin)
-
-    bot = Dkpgrcsk(settings, plugins=load_plugins)
+    bot = Dkpgrcsk(settings, config_file=config_file)
     bot.start()
 
 if __name__ == "__main__":
