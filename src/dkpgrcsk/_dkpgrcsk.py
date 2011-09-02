@@ -277,7 +277,7 @@ def main():
             settings[plugin.__provides__] = plugin_settings
             load_plugins.append(plugin)
 
-    bot = dkpgrcsk(settings, plugins=load_plugins)
+    bot = Dkpgrcsk(settings, plugins=load_plugins)
     bot.start()
 
 if __name__ == "__main__":
