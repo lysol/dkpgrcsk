@@ -19,7 +19,7 @@ class TwitterPlugin(DPlugin):
         )
 
     def timed(self, ticker):
-    """
+        """
         Check for replies using the API. Supply a since_id per the API,
         but also filter on date and time in case the bot is just starting up.
         """
