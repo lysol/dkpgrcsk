@@ -39,7 +39,7 @@ class TwitterPlugin(DPlugin):
                         for chname, chobj in self.bot.channels.items():
                             self.bot.connection.privmsg(chname,
                                 new_text)
-            self.last_id = tweets[0]['id']
+                self.last_id = tweets[0]['id']
 
             if self.last_id is not None:
                 kwargs = {
