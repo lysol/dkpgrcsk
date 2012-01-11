@@ -19,7 +19,7 @@ class TwitterPlugin(DPlugin):
         )
 
     def timed(self, ticker):
-	"""
+    """
         Check for replies using the API. Supply a since_id per the API,
         but also filter on date and time in case the bot is just starting up.
         """
@@ -34,12 +34,12 @@ class TwitterPlugin(DPlugin):
                     for tweet in tweets:
                         new_text = u'<%s> %s' % (tweet['user']['screen_name'],
                             tweet['text'])
-                        new_text = new_text.encode('utf-8')
+                        new_text = new_text.encode('utf-8').replace("\n", "")
 
                         for chname, chobj in self.bot.channels.items():
                             self.bot.connection.privmsg(chname,
                                 new_text)
-	        self.last_id = tweets[0]['id']
+            self.last_id = tweets[0]['id']
 
             if self.last_id is not None:
                 kwargs = {
@@ -114,7 +114,7 @@ class TwitterPlugin(DPlugin):
             try:
                 new_text = u'<%s> %s' % (timeline[0]['user']['screen_name'],
                     timeline[0]['text'])
-                new_text = new_text.encode('utf-8')
+                new_text = new_text.encode('utf-8').replace("\n", " ")
                 self.bot.connection.privmsg(reply_to, new_text)
             except IndexError:
                 self.bot.connection.privmsg(reply_to,
@@ -153,7 +153,7 @@ class TwitterPlugin(DPlugin):
                             result['text'])
                     except Exception, e:
                         print 'Error received: %s because of %s' % (e, result)
-                    new_text = new_text.encode('utf-8')
+                    new_text = new_text.encode('utf-8').replace("\n", "")
                     self.bot.connection.privmsg(reply_to, new_text)
 
                 self.bot.set_callback(self.twitter.ApiCall, process_tweet,
