@@ -38,7 +38,7 @@ class RepostPlugin(DPlugin):
     def __init__(self, bot, settings):
         self.urls = {}
         DPlugin.__init__(self, bot, settings)
-        if not hasattr(self, 'ignore'):
+        if hasattr(self, 'ignore'):
+            self.ignore = self.ignore.split(' ')
+        else:
             self.ignore = []
-        if hasattr(self, 'ignore') and not (type(self.ignore) == list):
-            self.ignore = [self.ignore]
