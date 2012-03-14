@@ -62,14 +62,13 @@ class DPlugin(object):
                 method(message, reply_to)
             except Exception as e:
                 self._error(e)
-                self.bot.connection.privmsg(reply_to, "An error occurred.")
+                #self.bot.connection.privmsg(reply_to, "An error occurred.")
 
         if hasattr(self, 'handle_url'):
             urls = filter(lambda u: u not in self.bot.settings['banned_urls'], 
                 pyfiurl.grab(full_message))
             if urls:
                 for url in urls:
-                    print 'fart'
                     self.handle_url(full_message, reply_to, url, sender)
 
     def timed(self, interval):
