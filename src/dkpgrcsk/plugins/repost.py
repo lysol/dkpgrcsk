@@ -29,9 +29,11 @@ class RepostPlugin(DPlugin):
             return
         if url in self.urls.keys():
             last_time = self.urls[url]
-            self.bot.connection.privmsg(reply_to,
-                'Thanks for posting this again. (%s since last time)' % \
-                    str(datetime.datetime.now() - last_time).split('.')[0])
+            datediff = datetime.datetime.now() - last_time
+            if datediff > datetime.timedelta(0,15):
+                self.bot.connection.privmsg(reply_to,
+                    'Thanks for posting this again. (%s since last time)' % \
+                        str(datetime.datetime.now() - last_time).split('.')[0])
         self.urls[url] = datetime.datetime.now()
         self.prune_old()
 
