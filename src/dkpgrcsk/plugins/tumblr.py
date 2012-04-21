@@ -82,13 +82,21 @@ class TumblrPlugin(DPlugin):
 
         times = times + 1
         print "Attempting to post %s for the #%i time" % (url, times)
+
         nick = nm_to_n(sender)
+        ops = self.bot.channels[self.bot.channel].opers()
+        voiced = self.bot.channels[self.bot.channel].voiced()
+        if hasattr(self, 'require_voice') and \
+            (nick not in voiced and nick not in ops):
+            return
+        if hasattr(self, 'require_ops') and \
+            nick not in ops:
+            return
+
         api = Api(self.tumblog, self.email, self.password)
         caption = '%s\nvia %s' % (filtered_msg, nick)
 
         def print_result(result):
-            print result
-            print type(result)
             try:
                 print "%s posted a %s to %s" % (nick, result['type'],
                     result['url'])
