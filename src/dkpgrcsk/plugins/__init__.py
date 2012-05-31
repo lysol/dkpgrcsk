@@ -5,6 +5,7 @@ from echo import *
 from friend import *
 from markov import *
 from repost import *
+from amazon_mangle import *
 
 
 class LogPlugin(DPlugin):

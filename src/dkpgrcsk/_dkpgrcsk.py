@@ -27,8 +27,11 @@ def host_matches(host, mask):
 
 class MissingPluginSetting(Exception):
 
-    def __repr__(self, plugin, setting):
-        return "%s requires setting '%s'" % (plugin, setting)
+    def __init__(self, plugin, setting):
+        self.msg = "%s requires setting '%s'" % (plugin, setting)
+
+    def __str__(self):
+        return self.msg
 
 
 class DPlugin(object):
@@ -47,13 +50,17 @@ class DPlugin(object):
     def _error(self, exception):
         print "EXCEPTION: %s %s" % (repr(exception), exception)
 
+    def _get_urls(self, e):
+        urls = filter(lambda u: u not in self.bot.settings['banned_urls'], 
+            pyfiurl.grab(e.arguments()[0]))
+        return urls
+
     def _command_check(self, c, e, reply_to):
         """Process commands that have corresponding methods."""
         arg = e.arguments()[0]
         cmds = arg.split(' ')
         cmd = cmds[0]
         message = ' '.join(cmds[1:])
-        full_message = ' '.join(cmds)
         method_name = 'do_%s' % cmd
         sender = e.source()
         if hasattr(self, method_name):
@@ -65,11 +72,10 @@ class DPlugin(object):
                 #self.bot.connection.privmsg(reply_to, "An error occurred.")
 
         if hasattr(self, 'handle_url'):
-            urls = filter(lambda u: u not in self.bot.settings['banned_urls'], 
-                pyfiurl.grab(full_message))
+            urls = self._get_urls(e)
             if urls:
                 for url in urls:
-                    self.handle_url(full_message, reply_to, url, sender)
+                    self.handle_url(arg, reply_to, url, sender)
 
     def timed(self, interval):
         """interval is the interal ticker for the timer. Use modulus to define
@@ -126,13 +132,23 @@ class Dkpgrcsk(SingleServerIRCBot):
         self.ticker += 1
         self.ircobj.execute_delayed(1.0, self._timed_events)
 
+    def _middleware(self, c, e):
+        for plugin in self.plugins:
+            the_class = type(plugin)            
+            if hasattr(plugin, 'middleware'):
+                method = getattr(the_class, 'middleware')
+                c, e = method(plugin, c, e)
+        return [c, e]
+
     def _hook(self, method_name, c, e):
         """Process event hooks."""
         for plugin in self.plugins:
             the_class = type(plugin)
             if method_name == 'on_pubmsg':
+                c, e = self._middleware(c, e)                
                 plugin._command_check(c, e, e.target())
             elif method_name == 'on_privmsg':
+                c, e = self._middleware(c, e)                        
                 plugin._command_check(c, e, nm_to_n(e.source()))
 
             if hasattr(plugin, method_name):
