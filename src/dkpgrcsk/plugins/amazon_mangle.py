@@ -27,5 +27,5 @@ class AmazonManglePlugin(DPlugin):
                 if (type(asin) in [tuple, list]):
                     asin = asin[0]
                 e._arguments[0] = e._arguments[0].replace(url, 
-                    "http://amazon.com/dp/%s/%s" % (asin, self.code))
+                    "http://amazon.com/dp/%s/?tag=%s" % (asin, self.code))
         return [c, e]
