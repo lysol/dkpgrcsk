@@ -61,15 +61,17 @@ class DPlugin(object):
         # check for command prefix
         if self.bot.settings['prefix'] != '':
             prefixlen = len(self.bot.settings['prefix'])
-            if arg[:prefixlen] != self.bot.settings['prefix']:
-                return
-            arg = arg[prefixlen:]
+            prefixmatch = arg[:prefixlen] == self.bot.settings['prefix']
+            if prefixmatch:
+                arg = arg[prefixlen:]
+        else:
+            prefixmatch = True
         cmds = arg.split(' ')
         cmd = cmds[0]
         message = ' '.join(cmds[1:])
         method_name = 'do_%s' % cmd
         sender = e.source()
-        if hasattr(self, method_name):
+        if hasattr(self, method_name) and prefixmatch:
             method = getattr(self, method_name)
             try:
                 method(message, reply_to)
