@@ -58,6 +58,12 @@ class DPlugin(object):
     def _command_check(self, c, e, reply_to):
         """Process commands that have corresponding methods."""
         arg = e.arguments()[0]
+        # check for command prefix
+        if self.bot.settings['prefix'] != '':
+            prefixlen = len(self.bot.settings['prefix'])
+            if arg[:prefixlen] != self.bot.settings['prefix']:
+                return
+            arg = arg[prefixlen:]
         cmds = arg.split(' ')
         cmd = cmds[0]
         message = ' '.join(cmds[1:])
@@ -262,7 +268,7 @@ def main():
         print "Usage: douglputt.py configfile"
         exit(1)
 
-    settings = {}
+    settings = {'prefix': ''}
     config = ConfigParser.ConfigParser()
     config.read(args[0])
     for option in config.options("dkpgrcsk"):

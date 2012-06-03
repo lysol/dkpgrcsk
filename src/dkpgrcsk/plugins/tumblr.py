@@ -30,8 +30,6 @@ class TumblrPlugin(DPlugin):
         # remove hash
         tag_args = [arg[1:] for arg in tag_args]
 
-        print "real args: %s\ntag args: %s" % (real_args, tag_args)
-
         if len(real_args) == 1:
             # quote a single person
             last_said = self.bot.log[reply_to][user][-1].strip()
@@ -81,7 +79,6 @@ class TumblrPlugin(DPlugin):
         filtered_msg = ' '.join(real_args).replace(url, '').replace(':', '')
 
         times = times + 1
-        print "Attempting to post %s for the #%i time" % (url, times)
 
         nick = nm_to_n(sender)
         ops = self.bot.channels[self.bot.channel].opers()
