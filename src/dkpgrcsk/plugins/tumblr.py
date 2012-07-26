@@ -19,6 +19,8 @@ class TumblrPlugin(DPlugin):
         )
 
     def do_quote(self, message, reply_to):
+        if reply_to not in self.bot.log:
+            return
         new_args = message.strip().split(' ')
         user = new_args[0]
         tag_args = filter(
