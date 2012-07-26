@@ -51,6 +51,8 @@ class DPlugin(object):
         print "EXCEPTION: %s %s" % (repr(exception), exception)
 
     def _get_urls(self, e):
+        if len(e.arguments()) == 0:
+            return []
         urls = filter(lambda u: u not in self.bot.settings['banned_urls'], 
             pyfiurl.grab(e.arguments()[0]))
         return urls
