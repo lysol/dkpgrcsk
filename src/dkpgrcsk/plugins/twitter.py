@@ -2,11 +2,12 @@ from .._dkpgrcsk import *
 import os
 import traceback
 from time import localtime, mktime, strptime
-import oauth2 as oauth
-from oauthtwitter import OAuthApi
+from HTMLParser import HTMLParser
 import cPickle
 from urlparse import urlparse
 import urllib2
+import oauth2 as oauth
+from oauthtwitter import OAuthApi
 
 
 class TwitterPlugin(DPlugin):
@@ -34,11 +35,9 @@ class TwitterPlugin(DPlugin):
                     for tweet in tweets:
                         new_text = u'<%s> %s' % (tweet['user']['screen_name'],
                             tweet['text'])
-                        new_text = new_text.encode('utf-8').replace("\n", "")
-
+                        new_text = self.IRCify(new_text)
                         for chname, chobj in self.bot.channels.items():
-                            self.bot.connection.privmsg(chname,
-                                new_text)
+                            self.bot.connection.privmsg(chname, new_text)
                 self.last_id = tweets[0]['id']
 
             if self.last_id is not None:
@@ -57,7 +56,7 @@ class TwitterPlugin(DPlugin):
             data = trends['trends']
             keywords = [t['name'] for t in data]
             new_text = ", ".join(keywords)
-            new_text = new_text.encode('utf-8')
+            new_text = self.IRCify(new_text)
             self.bot.connection.privmsg(reply_to, new_text)
         self.bot.set_callback(self.twitter.ApiCall, run_trends,
             args=("trends", "GET", {}))
@@ -91,7 +90,8 @@ class TwitterPlugin(DPlugin):
             try:
                 id = timeline[0]['id']
             except IndexError:
-                self.bot.connection.privmsg(reply_To, "Fail whale (Try again)")
+                self.bot.connection.privmsg(reply_To,
+                        "Fail whale (Try again)")
                 return
             result = self.twitter.ApiCall("statuses/destroy/%s" % id, "POST",
                 {})
@@ -114,7 +114,7 @@ class TwitterPlugin(DPlugin):
             try:
                 new_text = u'<%s> %s' % (timeline[0]['user']['screen_name'],
                     timeline[0]['text'])
-                new_text = new_text.encode('utf-8').replace("\n", " ")
+                new_text = self.IRCify(new_text)
                 self.bot.connection.privmsg(reply_to, new_text)
             except IndexError:
                 self.bot.connection.privmsg(reply_to,
@@ -126,7 +126,8 @@ class TwitterPlugin(DPlugin):
     def do_twit(self, message, reply_to):
         if len(message) > 140:
             self.bot.connection.privmsg(reply_to,
-                "Tweet too long. Trim off %d characters." % (len(message) - 140))
+                "Tweet too long. Trim off %d characters." % \
+                        (len(message) - 140))
             return
         self.bot.set_callback(self.twitter.UpdateStatus, lambda x: None,
             args=[message])
@@ -153,7 +154,7 @@ class TwitterPlugin(DPlugin):
                             result['text'])
                     except Exception, e:
                         print 'Error received: %s because of %s' % (e, result)
-                    new_text = new_text.encode('utf-8').replace("\n", "")
+                    new_text = self.IRCify(new_text)
                     self.bot.connection.privmsg(reply_to, new_text)
 
                 self.bot.set_callback(self.twitter.ApiCall, process_tweet,
@@ -179,9 +180,15 @@ class TwitterPlugin(DPlugin):
             access_token['oauth_token'], access_token['oauth_token_secret'])
         self.screen_name = access_token['screen_name']
 
+    def IRCify(self, text):
+        text = self._HTMLParser.unescape(text)
+        text = text.encode('utf-8').replace("\n", "")
+        return text
+
     def load_hook(self):
         while not os.path.exists('.twitter_auth'):
             self.initialize_twitter_auth()
         self.initialize_twitter()
         self.last_id = None
         self.last_untwit = mktime(localtime(None))
+        self._HTMLParser = HTMLParser()
