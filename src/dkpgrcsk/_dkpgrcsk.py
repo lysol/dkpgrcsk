@@ -77,8 +77,8 @@ class DPlugin(object):
             method = getattr(self, method_name)
             try:
                 method(message, reply_to)
-            except Exception as e:
-                self._error(e)
+            except Exception as exn:
+                self._error(exn)
                 #self.bot.connection.privmsg(reply_to, "An error occurred.")
 
         if hasattr(self, 'handle_url'):
