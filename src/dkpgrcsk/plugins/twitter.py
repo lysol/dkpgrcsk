@@ -69,19 +69,19 @@ class TwitterPlugin(DPlugin):
             user in self.bot.log[reply_to]:
             last_said = self.bot.log[reply_to][user][-1].strip()
             last_said += " " + " ".join(tags)
-            if len(last_said) > 140:
-                self.bot.connection.privmsg(reply_to, "Too long :(")
-                return
 
             def reply(result):
-                self.bot.connection.privmsg(reply_to,
-                    "%s has been quoted to twitter." % user)
+                if type(response) == urllib2.HTTPError:
+                    self.bot.connection.privmsg(reply_to, "Tweet did not go through. Check your character count and try again.")
+                else:
+                    self.bot.connection.privmsg(reply_to,
+                        "%s has been quoted to twitter." % user)
             self.bot.set_callback(self.twitter.UpdateStatus, reply,
                 args=[last_said])
 
     def do_untwit(self, message, reply_to):
         now = mktime(localtime(None))
-        if self.last_untwit + 60 >= now:
+        if self.last_untwit + 15 >= now:
             self.bot.connection.privmsg(reply_to, "Chill.")
             return
 
@@ -124,12 +124,10 @@ class TwitterPlugin(DPlugin):
             kwargs={'options': {'screen_name': username}})
 
     def do_twit(self, message, reply_to):
-        if len(message) > 140:
-            self.bot.connection.privmsg(reply_to,
-                "Tweet too long. Trim off %d characters." % \
-                        (len(message) - 140))
-            return
-        self.bot.set_callback(self.twitter.UpdateStatus, lambda x: None,
+        def handle_tweet_response(response):
+            if type(response) == urllib2.HTTPError:
+                self.bot.connection.privmsg(reply_to, "Tweet did not go through. Check your character count and try again.")
+        self.bot.set_callback(self.twitter.UpdateStatus, handle_tweet_response,
             args=[message])
 
     def handle_url(self, message, reply_to, url, sender, times=0):
