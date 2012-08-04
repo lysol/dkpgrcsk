@@ -20,6 +20,8 @@ class TwitterPlugin(DPlugin):
         'consumer_secret'
         )
 
+    _cached_places = None
+
     def timed(self, ticker):
         """
         Check for replies using the API. Supply a since_id per the API,
@@ -53,52 +55,54 @@ class TwitterPlugin(DPlugin):
                 kwargs=kwargs)
 
     def do_trends(self, message, reply_to):
-        args = filter(lambda x: x != '', message.strip().split(' '))
-        if len(args) > 0:
-            place = args[0]
-        else:
-            place = None
+        place = message.strip()
+        if place == '':
+            place = 'United States' 
         def run_trends(trends):
             if type(trends) == urllib2.HTTPError:
                 self.bot.connection.privmsg(reply_to, "Couldn't get trends")
                 return
             keywords = []
-            if place is not None:
-                trendlist = trends[0]['trends']
-                for trend in trendlist:
-                    keywords.append(trend['name'])
-            else:
-                trendlist = trends['trends']
-                for stamp in trendlist:
-                    for trend in trendlist[stamp]:
-                        if trend['promoted_content'] is None:
-                            keywords.append(trend['name'])
-            new_text = ", ".join(keywords)
-            new_text = self.IRCify(new_text)
-            self.bot.connection.privmsg(reply_to, new_text)
+            trendlist = trends[0]['trends']
+            keyword_payload = ['']
+            first = True
+            for trend in trendlist:
+                if not first:
+                    keyword_payload[-1] += ', '
+                first = False
+                keyword_payload[-1] += trend['name']
+                if len(keyword_payload[-1]) >= 140:
+                    first = True
+                    keyword_payload[-1] = self.IRCify(keyword_payload[-1])
+                    keyword_payload.append('')
+            for p in keyword_payload:
+                self.bot.connection.privmsg(reply_to, p)
 
         trend_args = {
-            'exclude': 'hashtags',
             'date': str(datetime.now()).split(' ')[0]
             }
         
-        if place is not None:
-            def handle_place(places):
-                woe = None
-                for a_place in places:
-                    if a_place['name'] == place:
-                        woe = a_place['woeid']
-                if not woe:
-                    self.bot.connection.privmsg(reply_to, "No such trend place.")
-                    return
-                else:
-                    self.bot.set_callback(self.twitter.ApiCall, run_trends,
-                        args=("trends/%d" % int(woe), "GET", trend_args))
+        def handle_place(places):
+            if self._cached_places is None and \
+                type(places) != urllib2.HTTPError:
+                self._cached_places = places
+            woe = None
+            for a_place in places:
+                if a_place['name'].lower() == place.lower() or \
+                    a_place['woeid'] == place:
+                    woe = a_place['woeid']
+            if not woe:
+                self.bot.connection.privmsg(reply_to,
+                    "Twitter doesn't have trends for %s" % place)
+                return
+            else:
+                self.bot.set_callback(self.twitter.ApiCall, run_trends,
+                    args=("trends/%d" % int(woe), "GET", trend_args))
+        if self._cached_places is None:
             self.bot.set_callback(self.twitter.ApiCall, handle_place,
                 args=("trends/available", "GET", {}))
         else:
-            self.bot.set_callback(self.twitter.ApiCall, run_trends,
-                    args=("trends/daily", "GET", trend_args))
+            handle_place(self._cached_places)
 
     def do_quote(self, message, reply_to):
         args = message.strip().split(' ')
@@ -192,6 +196,7 @@ class TwitterPlugin(DPlugin):
                     except Exception, e:
                         print 'Error received: %s because of %s' % (e, result)
                     new_text = self.IRCify(new_text)
+
                     self.bot.connection.privmsg(reply_to, new_text)
 
                 self.bot.set_callback(self.twitter.ApiCall, process_tweet,
