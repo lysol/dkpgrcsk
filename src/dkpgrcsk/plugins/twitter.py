@@ -54,56 +54,6 @@ class TwitterPlugin(DPlugin):
             self.bot.set_callback(self.twitter.GetMentions, handle_tweets,
                 kwargs=kwargs)
 
-    def do_trends(self, message, reply_to):
-        place = message.strip()
-        if place == '':
-            place = 'United States' 
-        def run_trends(trends):
-            if type(trends) == urllib2.HTTPError:
-                self.bot.connection.privmsg(reply_to, "Couldn't get trends")
-                return
-            keywords = []
-            trendlist = trends[0]['trends']
-            keyword_payload = ['']
-            first = True
-            for trend in trendlist:
-                if not first:
-                    keyword_payload[-1] += ', '
-                first = False
-                keyword_payload[-1] += trend['name']
-                if len(keyword_payload[-1]) >= 140:
-                    first = True
-                    keyword_payload[-1] = self.IRCify(keyword_payload[-1])
-                    keyword_payload.append('')
-            for p in keyword_payload:
-                self.bot.connection.privmsg(reply_to, p)
-
-        trend_args = {
-            'date': str(datetime.now()).split(' ')[0]
-            }
-        
-        def handle_place(places):
-            if self._cached_places is None and \
-                type(places) != urllib2.HTTPError:
-                self._cached_places = places
-            woe = None
-            for a_place in places:
-                if a_place['name'].lower() == place.lower() or \
-                    a_place['woeid'] == place:
-                    woe = a_place['woeid']
-            if not woe:
-                self.bot.connection.privmsg(reply_to,
-                    "Twitter doesn't have trends for %s" % place)
-                return
-            else:
-                self.bot.set_callback(self.twitter.ApiCall, run_trends,
-                    args=("trends/%d" % int(woe), "GET", trend_args))
-        if self._cached_places is None:
-            self.bot.set_callback(self.twitter.ApiCall, handle_place,
-                args=("trends/available", "GET", {}))
-        else:
-            handle_place(self._cached_places)
-
     def do_quote(self, message, reply_to):
         args = message.strip().split(' ')
         tags = filter(lambda x: x[0] == '#', args)
