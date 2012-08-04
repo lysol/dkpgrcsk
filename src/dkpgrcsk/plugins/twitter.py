@@ -2,6 +2,7 @@ from .._dkpgrcsk import *
 import os
 import traceback
 from time import localtime, mktime, strptime
+from datetime import datetime
 from HTMLParser import HTMLParser
 import cPickle
 from urlparse import urlparse
@@ -52,14 +53,52 @@ class TwitterPlugin(DPlugin):
                 kwargs=kwargs)
 
     def do_trends(self, message, reply_to):
+        args = filter(lambda x: x != '', message.strip().split(' '))
+        if len(args) > 0:
+            place = args[0]
+        else:
+            place = None
         def run_trends(trends):
-            data = trends['trends']
-            keywords = [t['name'] for t in data]
+            if type(trends) == urllib2.HTTPError:
+                self.bot.connection.privmsg(reply_to, "Couldn't get trends")
+                return
+            keywords = []
+            if place is not None:
+                trendlist = trends[0]['trends']
+                for trend in trendlist:
+                    keywords.append(trend['name'])
+            else:
+                trendlist = trends['trends']
+                for stamp in trendlist:
+                    for trend in trendlist[stamp]:
+                        if trend['promoted_content'] is None:
+                            keywords.append(trend['name'])
             new_text = ", ".join(keywords)
             new_text = self.IRCify(new_text)
             self.bot.connection.privmsg(reply_to, new_text)
-        self.bot.set_callback(self.twitter.ApiCall, run_trends,
-            args=("trends", "GET", {}))
+
+        trend_args = {
+            'exclude': 'hashtags',
+            'date': str(datetime.now()).split(' ')[0]
+            }
+        
+        if place is not None:
+            def handle_place(places):
+                woe = None
+                for a_place in places:
+                    if a_place['name'] == place:
+                        woe = a_place['woeid']
+                if not woe:
+                    self.bot.connection.privmsg(reply_to, "No such trend place.")
+                    return
+                else:
+                    self.bot.set_callback(self.twitter.ApiCall, run_trends,
+                        args=("trends/%d" % int(woe), "GET", trend_args))
+            self.bot.set_callback(self.twitter.ApiCall, handle_place,
+                args=("trends/available", "GET", {}))
+        else:
+            self.bot.set_callback(self.twitter.ApiCall, run_trends,
+                    args=("trends/daily", "GET", trend_args))
 
     def do_quote(self, message, reply_to):
         args = message.strip().split(' ')
@@ -71,7 +110,7 @@ class TwitterPlugin(DPlugin):
             last_said += " " + " ".join(tags)
 
             def reply(result):
-                if type(response) == urllib2.HTTPError:
+                if type(result) == urllib2.HTTPError:
                     self.bot.connection.privmsg(reply_to, "Tweet did not go through. Check your character count and try again.")
                 else:
                     self.bot.connection.privmsg(reply_to,
